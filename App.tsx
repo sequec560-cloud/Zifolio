@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Wallet, 
   Calculator, 
-  User, 
+  User as UserIcon, 
   LogOut, 
   Menu,
   X,
   Newspaper
 } from 'lucide-react';
-import { ViewState, NewsArticle } from './types';
+import { ViewState, NewsArticle, User } from './types';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Assets from './pages/Assets';
@@ -17,17 +17,21 @@ import Simulator from './pages/Simulator';
 import Profile from './pages/Profile';
 import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
+import { db } from './services/db';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('login');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const handleLogin = () => {
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
     setCurrentView('dashboard');
   };
 
   const handleLogout = () => {
+    setCurrentUser(null);
     setCurrentView('login');
     setIsMobileMenuOpen(false);
   };
@@ -35,6 +39,11 @@ const App: React.FC = () => {
   const handleArticleClick = (article: NewsArticle) => {
     setSelectedArticle(article);
     setCurrentView('news-detail');
+  };
+
+  const handleUpdateUser = (updatedUser: User) => {
+    db.updateUser(updatedUser);
+    setCurrentUser(updatedUser);
   };
 
   const NavItem = ({ view, icon: Icon, label }: { view: ViewState; icon: any; label: string }) => (
@@ -58,7 +67,7 @@ const App: React.FC = () => {
     </button>
   );
 
-  if (currentView === 'login') {
+  if (currentView === 'login' || !currentUser) {
     return <Login onLogin={handleLogin} />;
   }
 
@@ -90,10 +99,12 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-3 mb-8 p-4 bg-zblack-800/50 rounded-2xl border border-zblack-800">
-             <img src="https://picsum.photos/100/100" alt="User" className="w-10 h-10 rounded-full border-2 border-zgold-500" />
-             <div>
-               <p className="text-sm font-semibold text-white">Methew White</p>
-               <p className="text-xs text-gray-500">Investidor Premium</p>
+             <div className="w-10 h-10 rounded-full bg-zgold-500 text-black flex items-center justify-center font-bold text-lg border-2 border-zgold-400">
+               {currentUser.name.charAt(0)}
+             </div>
+             <div className="overflow-hidden">
+               <p className="text-sm font-semibold text-white truncate">{currentUser.name}</p>
+               <p className="text-xs text-gray-500 truncate">Investidor {currentUser.plan || 'Free'}</p>
              </div>
           </div>
 
@@ -102,7 +113,7 @@ const App: React.FC = () => {
             <NavItem view="assets" icon={Wallet} label="Meus Ativos" />
             <NavItem view="simulator" icon={Calculator} label="Simulador" />
             <NavItem view="news" icon={Newspaper} label="Notícias" />
-            <NavItem view="profile" icon={User} label="Perfil" />
+            <NavItem view="profile" icon={UserIcon} label="Perfil" />
           </nav>
         </div>
 
@@ -118,7 +129,7 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 h-screen">
         <div className="max-w-5xl mx-auto pb-20 md:pb-0">
-          {currentView === 'dashboard' && <Dashboard />}
+          {currentView === 'dashboard' && <Dashboard user={currentUser} />}
           {currentView === 'assets' && <Assets />}
           {currentView === 'simulator' && <Simulator />}
           {currentView === 'news' && <News onArticleClick={handleArticleClick} />}
@@ -129,7 +140,7 @@ const App: React.FC = () => {
               onArticleClick={handleArticleClick}
             />
           )}
-          {currentView === 'profile' && <Profile />}
+          {currentView === 'profile' && <Profile user={currentUser} onUpdateUser={handleUpdateUser} />}
         </div>
       </main>
 

@@ -51,7 +51,7 @@ const Simulator: React.FC = () => {
             <div>
               <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
                 <span>Investimento Inicial</span>
-                <span className="text-zgold-500">{formatKz(amount)}</span>
+                <span className="text-zgold-500 font-mono">{formatKz(amount)}</span>
               </label>
               <input 
                 type="range" 
@@ -67,7 +67,7 @@ const Simulator: React.FC = () => {
             <div>
               <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
                 <span>Taxa Anual (%)</span>
-                <span className="text-zgold-500">{rate}%</span>
+                <span className="text-zgold-500 font-mono">{rate}%</span>
               </label>
               <input 
                 type="range" 
@@ -87,7 +87,7 @@ const Simulator: React.FC = () => {
             <div>
               <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
                 <span>Prazo (Anos)</span>
-                <span className="text-zgold-500">{years} Anos</span>
+                <span className="text-zgold-500 font-mono">{years} Anos</span>
               </label>
               <div className="flex gap-2 mt-2">
                 {[1, 2, 3, 5, 10].map(y => (
@@ -114,11 +114,11 @@ const Simulator: React.FC = () => {
            <div className="grid grid-cols-2 gap-4">
               <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
                 <p className="text-gray-400 text-sm">Valor Final Estimado</p>
-                <p className="text-3xl font-bold text-white mt-2">{formatKz(amount + totalReturns)}</p>
+                <p className="text-3xl font-bold text-white mt-2 font-mono tracking-tight">{formatKz(amount + totalReturns)}</p>
               </div>
               <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
                 <p className="text-gray-400 text-sm">Total Juros (Lucro)</p>
-                <p className="text-3xl font-bold text-green-500 mt-2">+{formatKz(totalReturns)}</p>
+                <p className="text-3xl font-bold text-green-500 mt-2 font-mono tracking-tight">+{formatKz(totalReturns)}</p>
               </div>
            </div>
 
@@ -135,12 +135,12 @@ const Simulator: React.FC = () => {
                       </linearGradient>
                     </defs>
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#141414', borderColor: '#333', borderRadius: '12px', color: '#fff' }}
+                      contentStyle={{ backgroundColor: '#141414', borderColor: '#333', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
                       formatter={(value: number) => [formatKz(value), "Valor"]}
                       labelFormatter={(label) => `Mês ${label}`}
                     />
-                    <XAxis dataKey="month" stroke="#333" />
-                    <YAxis hide />
+                    <XAxis dataKey="month" stroke="#333" tick={{fontSize: 12}} />
+                    <YAxis hide domain={['dataMin', 'auto']} />
                     <Area 
                       type="monotone" 
                       dataKey="value" 

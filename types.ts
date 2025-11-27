@@ -51,4 +51,14 @@ export interface MarketIndicator {
   isPositive: boolean;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  password?: string; // Stored locally for MVP demo purposes only
+  phone?: string;
+  plan?: 'Free' | 'Premium';
+  createdAt: string;
+}
+
 export type ViewState = 'login' | 'dashboard' | 'assets' | 'simulator' | 'profile' | 'news' | 'news-detail';

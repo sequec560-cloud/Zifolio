@@ -29,7 +29,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick
           }
         }
         .animate-enter {
-          animation: fadeInUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+          animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           opacity: 0;
           will-change: opacity, transform;
         }
@@ -40,10 +40,10 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick
           }
         }
         .delay-0 { animation-delay: 0ms; }
-        .delay-100 { animation-delay: 50ms; }
-        .delay-200 { animation-delay: 100ms; }
-        .delay-300 { animation-delay: 150ms; }
-        .delay-400 { animation-delay: 200ms; }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
       `}</style>
 
       {/* Navigation Header */}
@@ -71,11 +71,11 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Hero Image */}
-          <div className="relative h-[300px] md:h-[400px] w-full rounded-3xl overflow-hidden shadow-2xl shadow-black/50 animate-enter delay-100">
+          <div className="relative h-[300px] md:h-[400px] w-full rounded-3xl overflow-hidden shadow-2xl shadow-black/50 animate-enter delay-100 group">
             <img 
               src={article.imageUrl} 
               alt={article.title} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="lazy"
             />
             <div className="absolute top-4 left-4">
@@ -111,10 +111,10 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick
           </div>
 
           {/* Article Content */}
-          <div className="prose prose-invert prose-lg max-w-none text-gray-300 animate-enter delay-300">
+          <div className="prose prose-invert prose-lg max-w-none text-gray-300 animate-enter delay-300 leading-relaxed">
             {article.content ? (
               article.content.split('\n\n').map((paragraph, index) => (
-                <p key={index} className="mb-4 leading-relaxed text-lg">
+                <p key={index} className="mb-6">
                   {paragraph}
                 </p>
               ))
@@ -127,38 +127,40 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick
         {/* Sidebar / Related */}
         <div className="space-y-6 animate-enter delay-400">
           <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl sticky top-6">
-            <h3 className="font-bold text-white mb-6 text-lg">Relacionados</h3>
+            <h3 className="font-bold text-white mb-6 text-lg border-b border-zblack-800 pb-4">Relacionados</h3>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               {relatedNews.map((item) => (
                 <div 
                   key={item.id} 
                   onClick={() => onArticleClick(item)}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer flex flex-col gap-3"
                 >
-                  <div className="relative h-32 rounded-xl overflow-hidden mb-3">
+                  <div className="relative h-32 rounded-xl overflow-hidden shadow-lg">
                     <img 
                       src={item.imageUrl} 
                       alt={item.title} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                   </div>
-                  <div className="flex items-center gap-2 mb-1">
-                     <span className="text-[10px] text-zgold-500 font-bold uppercase">{item.category}</span>
-                     <span className="text-[10px] text-gray-500">• {item.date}</span>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1.5">
+                       <span className="text-[10px] text-zgold-500 font-bold uppercase tracking-wider">{item.category}</span>
+                       <span className="text-[10px] text-gray-500">• {item.date}</span>
+                    </div>
+                    <h4 className="font-bold text-white text-sm leading-snug group-hover:text-zgold-500 transition-colors line-clamp-2">
+                      {item.title}
+                    </h4>
                   </div>
-                  <h4 className="font-bold text-white leading-snug group-hover:text-zgold-500 transition-colors">
-                    {item.title}
-                  </h4>
                 </div>
               ))}
             </div>
 
             <button 
               onClick={onBack}
-              className="w-full mt-6 py-3 border border-zblack-800 rounded-xl text-gray-400 hover:text-white hover:bg-zblack-800 transition-colors flex items-center justify-center gap-2 text-sm"
+              className="w-full mt-8 py-3.5 border border-zblack-800 rounded-xl text-gray-400 hover:text-white hover:bg-zblack-800 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
             >
               Ver mais notícias <ArrowRight size={16} />
             </button>

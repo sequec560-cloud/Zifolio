@@ -1,18 +1,50 @@
 import React, { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, UserPlus, LogIn, AlertCircle } from 'lucide-react';
+import { User } from '../types';
+import { db } from '../services/db';
 
 interface LoginProps {
-  onLogin: () => void;
+  onLogin: (user: User) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate auth
-    onLogin();
+    setError(null);
+
+    try {
+      if (isRegistering) {
+        // Register Logic
+        const newUser = db.createUser({
+          name,
+          email,
+          password,
+          phone
+        });
+        onLogin(newUser);
+      } else {
+        // Login Logic
+        const user = db.login(email, password);
+        onLogin(user);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Ocorreu um erro.');
+    }
+  };
+
+  const toggleMode = () => {
+    setIsRegistering(!isRegistering);
+    setError(null);
+    setPassword('');
   };
 
   return (
@@ -26,11 +58,36 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <h1 className="text-4xl font-bold text-white mb-2 tracking-tighter">
             Zi<span className="text-zgold-500">FÓLIO</span>
           </h1>
-          <p className="text-gray-400">A tua carteira de investimentos, clara como nunca.</p>
+          <p className="text-gray-400">
+            {isRegistering 
+              ? 'Crie a sua carteira de investimentos inteligente.' 
+              : 'A tua carteira de investimentos, clara como nunca.'}
+          </p>
         </div>
 
         <div className="bg-zblack-900 border border-zblack-800 p-8 rounded-3xl shadow-2xl backdrop-blur-xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center gap-2 text-red-500 text-sm animate-in slide-in-from-top-2">
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isRegistering && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Nome Completo</label>
+                <input 
+                  type="text" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  placeholder="Seu nome"
+                  required={isRegistering}
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
               <input 
@@ -42,11 +99,25 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 required
               />
             </div>
+
+            {isRegistering && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Telefone</label>
+                <input 
+                  type="tel" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  placeholder="+244"
+                  required={isRegistering}
+                />
+              </div>
+            )}
             
             <div>
               <div className="flex justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-400">Senha</label>
-                <a href="#" className="text-xs text-zgold-500 hover:text-zgold-400">Esqueceu a senha?</a>
+                {!isRegistering && <a href="#" className="text-xs text-zgold-500 hover:text-zgold-400">Esqueceu a senha?</a>}
               </div>
               <input 
                 type="password" 
@@ -60,10 +131,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
             <button 
               type="submit"
-              className="w-full bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-zgold-500/20 transform active:scale-95"
+              className="w-full bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-zgold-500/20 transform active:scale-95 mt-2"
             >
-              <span>Entrar na Carteira</span>
-              <ArrowRight size={18} />
+              <span>{isRegistering ? 'Criar Conta Gratuita' : 'Entrar na Carteira'}</span>
+              {isRegistering ? <UserPlus size={18} /> : <ArrowRight size={18} />}
             </button>
           </form>
 
@@ -86,9 +157,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
         </div>
         
-        <p className="text-center mt-6 text-gray-500 text-sm">
-          Não tem conta? <a href="#" className="text-zgold-500 font-medium">Registar agora</a>
-        </p>
+        <div className="text-center mt-6">
+           <button 
+             onClick={toggleMode}
+             className="text-gray-500 text-sm hover:text-white transition-colors"
+           >
+             {isRegistering 
+               ? <span>Já tem conta? <span className="text-zgold-500 font-medium">Fazer Login</span></span>
+               : <span>Não tem conta? <span className="text-zgold-500 font-medium">Registar agora</span></span>
+             }
+           </button>
+        </div>
       </div>
     </div>
   );

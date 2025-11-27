@@ -116,15 +116,15 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex overflow-x-auto gap-2 pb-2 md:pb-0 scrollbar-hide w-full md:w-auto">
+        <div className="flex overflow-x-auto gap-3 pb-2 md:pb-0 scrollbar-hide w-full md:w-auto p-1">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-300 border ${
                 filter === cat 
-                  ? 'bg-zgold-500 text-black' 
-                  : 'bg-zblack-900 text-gray-400 hover:bg-zblack-800 hover:text-white border border-zblack-800'
+                  ? 'bg-zblack-800 text-zgold-500 border-zgold-500 shadow-[0_0_15px_rgba(240,152,5,0.15)] transform scale-105' 
+                  : 'bg-zblack-900 text-gray-400 border-zblack-800 hover:border-gray-600 hover:text-gray-200'
               }`}
             >
               {cat}

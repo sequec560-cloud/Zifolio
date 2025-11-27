@@ -6,18 +6,68 @@ import {
   ArrowUpRight,
   PieChart as PieIcon,
   Activity,
-  Minus
+  Minus,
+  Calendar,
+  Percent,
+  ShieldAlert
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { MOCK_ASSETS, MOCK_TRANSACTIONS, MARKET_INDICATORS, formatKz } from '../constants';
+import { User, AssetType } from '../types';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  user: User;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   // Aggregate calculations
   const totalInvested = MOCK_ASSETS.reduce((acc, curr) => acc + curr.investedAmount, 0);
   const currentTotalValue = MOCK_ASSETS.reduce((acc, curr) => acc + (curr.quantity * curr.currentPriceUnit), 0);
   const totalProfit = currentTotalValue - totalInvested;
   const profitPercentage = ((totalProfit / totalInvested) * 100).toFixed(2);
   const monthlyYield = 1.8; // Hardcoded for MVP visualization
+
+  // New Performance Metrics Calculations
+  
+  // 1. Average Annual Return (Weighted by investment amount)
+  const weightedInterestRate = totalInvested > 0 ? MOCK_ASSETS.reduce((acc, asset) => {
+    // Stocks might have 0 interest rate in this model, but we use what's there
+    return acc + (asset.investedAmount * (asset.interestRate || 0));
+  }, 0) / totalInvested : 0;
+
+  // 2. Risk Score Calculation
+  // 1 = Low (Treasury), 3 = Medium (Corp), 5 = High (Stocks)
+  const getRiskWeight = (type: AssetType) => {
+    switch (type) {
+      case AssetType.OT:
+      case AssetType.BT:
+        return 1;
+      case AssetType.CORP:
+        return 3;
+      case AssetType.STOCK:
+        return 5;
+      default:
+        return 2;
+    }
+  };
+
+  const riskScore = totalInvested > 0 ? MOCK_ASSETS.reduce((acc, asset) => {
+    return acc + (asset.investedAmount * getRiskWeight(asset.type));
+  }, 0) / totalInvested : 0;
+
+  let riskLabel = 'Conservador';
+  let riskColor = 'text-green-500';
+  if (riskScore > 1.5 && riskScore <= 3.5) {
+    riskLabel = 'Moderado';
+    riskColor = 'text-yellow-500';
+  } else if (riskScore > 3.5) {
+    riskLabel = 'Agressivo';
+    riskColor = 'text-red-500';
+  }
+
+  // 3. YTD Return (Simulated for this context as ~80% of total profit percentage for the year)
+  const ytdReturn = (Number(profitPercentage) * 0.85).toFixed(2);
+
 
   // Chart Data Preparation
   const evolutionData = [
@@ -127,8 +177,8 @@ const Dashboard: React.FC = () => {
               </span>
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Methew White</p>
-              <p className="text-xl text-white font-medium mt-1 tracking-widest">BODIVA INVESTOR</p>
+              <p className="text-gray-400 text-sm">{user.name}</p>
+              <p className="text-xl text-white font-medium mt-1 tracking-widest uppercase">BODIVA {user.plan || 'INVESTOR'}</p>
             </div>
             <div className="flex gap-4 mt-4">
                <div className="flex-1 bg-zblack-950/50 p-3 rounded-xl backdrop-blur-sm">
@@ -192,6 +242,51 @@ const Dashboard: React.FC = () => {
              {/* Decorative circles */}
              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500"></div>
           </div>
+        </div>
+      </div>
+
+      {/* Performance Metrics Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* YTD Return */}
+        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-zblack-950 rounded-xl text-purple-400">
+              <Calendar size={20} />
+            </div>
+            <div>
+              <p className="text-gray-400 text-xs">Retorno YTD</p>
+              <p className="text-xl font-bold text-white mt-0.5">+{ytdReturn}%</p>
+            </div>
+          </div>
+          <span className="text-xs text-gray-500">Desde Jan 1</span>
+        </div>
+
+        {/* Avg Annual Return */}
+        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-zblack-950 rounded-xl text-zgold-500">
+              <Percent size={20} />
+            </div>
+            <div>
+              <p className="text-gray-400 text-xs">Média Anual</p>
+              <p className="text-xl font-bold text-white mt-0.5">{weightedInterestRate.toFixed(2)}%</p>
+            </div>
+          </div>
+          <span className="text-xs text-gray-500">Ponderada</span>
+        </div>
+
+        {/* Risk Score */}
+        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-zblack-950 rounded-xl text-red-400">
+              <ShieldAlert size={20} />
+            </div>
+            <div>
+              <p className="text-gray-400 text-xs">Risco da Carteira</p>
+              <p className={`text-xl font-bold mt-0.5 ${riskColor}`}>{riskLabel}</p>
+            </div>
+          </div>
+          <span className="text-xs font-mono bg-zblack-950 px-2 py-1 rounded text-gray-400">{riskScore.toFixed(1)}/5.0</span>
         </div>
       </div>
 
