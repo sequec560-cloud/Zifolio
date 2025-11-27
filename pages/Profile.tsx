@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone } from 'lucide-react';
+import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle } from 'lucide-react';
 import { User } from '../types';
 
 interface ProfileProps {
@@ -11,6 +11,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
   // User Profile State
   const [tempProfile, setTempProfile] = useState<User>(user);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   // Sync tempProfile if user prop changes (e.g. external updates)
   useEffect(() => {
@@ -30,11 +31,28 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
 
   const handleOpenEditProfile = () => {
     setTempProfile(user);
+    setEditError(null); // Clear previous errors
     setIsEditModalOpen(true);
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    setEditError(null);
+
+    const phone = tempProfile.phone || '';
+    // Remove spaces and dashes for validation
+    const cleanPhone = phone.replace(/[\s-]/g, '');
+
+    // Validation Logic:
+    // 1. Starts with +244 and has 9 digits after (Total 13: +2449xxxxxxxx)
+    // 2. Starts with 9 and has 8 digits after (Total 9: 9xxxxxxxx)
+    const isValidAngolan = /^(\+244)?9\d{8}$/.test(cleanPhone);
+
+    if (phone && !isValidAngolan) {
+      setEditError('Número inválido. Use o formato Angolano (ex: +244 923... ou 923...).');
+      return;
+    }
+
     onUpdateUser(tempProfile);
     setIsEditModalOpen(false);
   };
@@ -231,6 +249,14 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
                 <X size={20} />
               </button>
             </div>
+
+            {/* Error Alert */}
+            {editError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center gap-2 text-red-500 text-xs font-medium animate-in slide-in-from-top-1">
+                <AlertCircle size={14} className="flex-shrink-0" />
+                <span>{editError}</span>
+              </div>
+            )}
             
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
@@ -268,6 +294,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
                   value={tempProfile.phone || ''}
                   onChange={e => setTempProfile({...tempProfile, phone: e.target.value})}
                   className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  placeholder="+244 9..."
                 />
               </div>
 
