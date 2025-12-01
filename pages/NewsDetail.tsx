@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Calendar, User, Share2, Bookmark, Clock, ArrowRight } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { NewsArticle } from '../types';
 import { MOCK_NEWS } from '../constants';
 
-interface NewsDetailProps {
-  article: NewsArticle;
-  onBack: () => void;
-  onArticleClick: (article: NewsArticle) => void;
-}
+const NewsDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [article, setArticle] = useState<NewsArticle | null>(null);
 
-const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick }) => {
+  useEffect(() => {
+    // Find article by ID from the mock data
+    const found = MOCK_NEWS.find(n => n.id === id);
+    if (found) {
+        setArticle(found);
+    } else {
+        // Handle not found
+        navigate('/news'); 
+    }
+  }, [id, navigate]);
+
+  if (!article) return null;
+
   // Get related articles (exclude current, take 2 random)
   const relatedNews = MOCK_NEWS
     .filter(n => n.id !== article.id)
@@ -49,7 +61,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick
       {/* Navigation Header */}
       <div className="flex justify-between items-center mb-6 animate-enter delay-0">
         <button 
-          onClick={onBack}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors bg-zblack-900 hover:bg-zblack-800 px-4 py-2 rounded-xl border border-zblack-800"
         >
           <ArrowLeft size={20} />
@@ -133,7 +145,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick
               {relatedNews.map((item) => (
                 <div 
                   key={item.id} 
-                  onClick={() => onArticleClick(item)}
+                  onClick={() => navigate(`/news/${item.id}`)}
                   className="group cursor-pointer flex flex-col gap-3"
                 >
                   <div className="relative h-32 rounded-xl overflow-hidden shadow-lg">
@@ -159,7 +171,7 @@ const NewsDetail: React.FC<NewsDetailProps> = ({ article, onBack, onArticleClick
             </div>
 
             <button 
-              onClick={onBack}
+              onClick={() => navigate('/news')}
               className="w-full mt-8 py-3.5 border border-zblack-800 rounded-xl text-gray-400 hover:text-white hover:bg-zblack-800 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
             >
               Ver mais notícias <ArrowRight size={16} />

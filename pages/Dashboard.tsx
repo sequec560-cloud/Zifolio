@@ -32,8 +32,8 @@ import {
   BarChart,
   Bar
 } from 'recharts';
-import { MOCK_TRANSACTIONS, MARKET_INDICATORS, formatKz } from '../constants';
-import { User, AssetType, Asset, Task } from '../types';
+import { MARKET_INDICATORS, formatKz } from '../constants';
+import { User, AssetType, Asset, Task, Transaction } from '../types';
 import { db } from '../services/db';
 
 interface DashboardProps {
@@ -44,6 +44,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ user, onOpenPremium }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +56,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onOpenPremium }) => {
     // Load tasks for current user
     const userTasks = db.getUserTasks(user.id);
     setTasks(userTasks);
+
+    // Load transactions
+    const txs = db.getUserTransactions(user.id);
+    setRecentTransactions(txs.slice(0, 5)); // Take top 5 recent
 
     setLoading(false);
   }, [user.id]);
@@ -533,25 +538,29 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onOpenPremium }) => {
             <button className="text-zgold-500 text-sm hover:underline">Ver todos</button>
           </div>
           <div className="space-y-4">
-            {MOCK_TRANSACTIONS.map((t) => (
-              <div key={t.id} className="flex justify-between items-center p-3 hover:bg-zblack-950 rounded-xl transition-colors cursor-pointer group/item">
-                <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-full ${t.type === 'buy' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                    {t.type === 'buy' ? <TrendingDown size={20} /> : <TrendingUp size={20} />}
+            {recentTransactions.length === 0 ? (
+               <div className="text-gray-500 text-sm text-center py-4">Nenhuma transação recente.</div>
+            ) : (
+              recentTransactions.map((t) => (
+                <div key={t.id} className="flex justify-between items-center p-3 hover:bg-zblack-950 rounded-xl transition-colors cursor-pointer group/item">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-full ${t.type === 'buy' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                      {t.type === 'buy' ? <TrendingDown size={20} /> : <TrendingUp size={20} />}
+                    </div>
+                    <div>
+                      <p className="font-medium text-white group-hover/item:text-zgold-500 transition-colors">{t.assetName}</p>
+                      <p className="text-xs text-gray-500 capitalize">{t.type === 'interest' ? 'Pagamento de Juros' : t.type === 'buy' ? 'Compra' : 'Venda'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-white group-hover/item:text-zgold-500 transition-colors">{t.assetName}</p>
-                    <p className="text-xs text-gray-500 capitalize">{t.type === 'interest' ? 'Pagamento de Juros' : t.type === 'buy' ? 'Compra' : 'Venda'}</p>
+                  <div className="text-right">
+                    <p className={`font-bold ${t.type === 'buy' ? 'text-white' : 'text-green-500'}`}>
+                      {t.type === 'buy' ? '-' : '+'}{formatKz(t.amount)}
+                    </p>
+                    <p className="text-xs text-gray-500">{t.date}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`font-bold ${t.type === 'buy' ? 'text-white' : 'text-green-500'}`}>
-                    {t.type === 'buy' ? '-' : '+'}{formatKz(t.amount)}
-                  </p>
-                  <p className="text-xs text-gray-500">{t.date}</p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

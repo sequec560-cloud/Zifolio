@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, Globe, ExternalLink, Filter, ArrowRight, Minus, Calendar, User, Search, X } from 'lucide-react';
 import { MOCK_NEWS, MARKET_INDICATORS } from '../constants';
 import { NewsArticle } from '../types';
+import { useNavigate } from 'react-router-dom';
 
-interface NewsProps {
-  onArticleClick: (article: NewsArticle) => void;
-}
-
-const News: React.FC<NewsProps> = ({ onArticleClick }) => {
+const News: React.FC = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<string>('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -44,6 +42,10 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
   const clearDateFilter = () => {
     setStartDate('');
     setEndDate('');
+  };
+
+  const onArticleClick = (article: NewsArticle) => {
+    navigate(`/news/${article.id}`);
   };
 
   return (

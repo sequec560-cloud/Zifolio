@@ -12,12 +12,13 @@ import {
   Send,
   Check,
   Crown,
-  Star,
   Zap,
   ShieldCheck,
-  ArrowRight
+  ArrowRight,
+  Star
 } from 'lucide-react';
-import { ViewState, NewsArticle, User } from './types';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { User } from './types';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Assets from './pages/Assets';
@@ -28,9 +29,9 @@ import NewsDetail from './pages/NewsDetail';
 import { db } from './services/db';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>('login');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Feedback State
@@ -44,20 +45,21 @@ const App: React.FC = () => {
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
   const [upgradeSuccess, setUpgradeSuccess] = useState(false);
 
+  // Restore user from session if available (simplified for MVP)
+  useEffect(() => {
+    // In a real app, we'd check session token. Here we rely on Login state.
+    // If we wanted persistence on refresh without router state, we'd store userId in sessionStorage.
+  }, []);
+
   const handleLogin = (user: User) => {
     setCurrentUser(user);
-    setCurrentView('dashboard');
+    navigate('/dashboard');
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    setCurrentView('login');
     setIsMobileMenuOpen(false);
-  };
-
-  const handleArticleClick = (article: NewsArticle) => {
-    setSelectedArticle(article);
-    setCurrentView('news-detail');
+    navigate('/login');
   };
 
   const handleUpdateUser = (updatedUser: User) => {
@@ -69,7 +71,6 @@ const App: React.FC = () => {
     if (!currentUser) return;
     setIsProcessingUpgrade(true);
 
-    // Simulate API delay
     setTimeout(() => {
       try {
         const upgradedUser = db.upgradeToPremium(currentUser.id);
@@ -77,7 +78,6 @@ const App: React.FC = () => {
         setUpgradeSuccess(true);
         setIsProcessingUpgrade(false);
         
-        // Close modal after success animation
         setTimeout(() => {
           setIsPremiumModalOpen(false);
           setUpgradeSuccess(false);
@@ -100,7 +100,6 @@ const App: React.FC = () => {
     });
 
     setFeedbackSent(true);
-    // Increase timeout to 3 seconds for better UX
     setTimeout(() => {
       setFeedbackSent(false);
       setIsFeedbackOpen(false);
@@ -109,29 +108,39 @@ const App: React.FC = () => {
     }, 3000);
   };
 
-  const NavItem = ({ view, icon: Icon, label }: { view: ViewState; icon: any; label: string }) => (
-    <button
-      onClick={() => {
-        // If clicking News nav item, reset to main news view
-        if (view === 'news') {
-          setSelectedArticle(null);
-        }
-        setCurrentView(view);
-        setIsMobileMenuOpen(false);
-      }}
-      className={`flex items-center space-x-3 w-full p-3 rounded-xl transition-all duration-300 ${
-        (currentView === view || (view === 'news' && currentView === 'news-detail'))
-          ? 'bg-zgold-500 text-black font-semibold shadow-lg shadow-zgold-500/20' 
-          : 'text-gray-400 hover:bg-zblack-800 hover:text-white'
-      }`}
-    >
-      <Icon size={20} />
-      <span>{label}</span>
-    </button>
-  );
+  const NavItem = ({ path, icon: Icon, label }: { path: string; icon: any; label: string }) => {
+    const isActive = location.pathname.startsWith(path);
+    return (
+      <button
+        onClick={() => {
+          navigate(path);
+          setIsMobileMenuOpen(false);
+        }}
+        className={`flex items-center space-x-3 w-full p-3 rounded-xl transition-all duration-300 ${
+          isActive
+            ? 'bg-zgold-500 text-black font-semibold shadow-lg shadow-zgold-500/20' 
+            : 'text-gray-400 hover:bg-zblack-800 hover:text-white'
+        }`}
+      >
+        <Icon size={20} />
+        <span>{label}</span>
+      </button>
+    );
+  };
 
-  if (currentView === 'login' || !currentUser) {
-    return <Login onLogin={handleLogin} />;
+  // Auth Guard
+  if (!currentUser && !location.pathname.startsWith('/login')) {
+     return <Login onLogin={handleLogin} />;
+  }
+
+  // Pure Login Route check
+  if (!currentUser) {
+      return (
+        <Routes>
+           <Route path="/login" element={<Login onLogin={handleLogin} />} />
+           <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      );
   }
 
   return (
@@ -147,7 +156,7 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      {/* Sidebar Navigation (Desktop & Mobile Drawer) */}
+      {/* Sidebar Navigation */}
       <aside className={`
         fixed inset-y-0 left-0 z-40 w-72 bg-zblack-900 border-r border-zblack-800 transform transition-transform duration-300 ease-in-out
         md:relative md:translate-x-0 flex flex-col justify-between p-6
@@ -179,16 +188,15 @@ const App: React.FC = () => {
           </div>
 
           <nav className="space-y-2">
-            <NavItem view="dashboard" icon={LayoutDashboard} label="Visão Geral" />
-            <NavItem view="assets" icon={Wallet} label="Meus Ativos" />
-            <NavItem view="simulator" icon={Calculator} label="Simulador" />
-            <NavItem view="news" icon={Newspaper} label="Notícias" />
-            <NavItem view="profile" icon={UserIcon} label="Perfil" />
+            <NavItem path="/dashboard" icon={LayoutDashboard} label="Visão Geral" />
+            <NavItem path="/assets" icon={Wallet} label="Meus Ativos" />
+            <NavItem path="/simulator" icon={Calculator} label="Simulador" />
+            <NavItem path="/news" icon={Newspaper} label="Notícias" />
+            <NavItem path="/profile" icon={UserIcon} label="Perfil" />
           </nav>
         </div>
 
         <div className="space-y-2">
-          {/* Feedback Button */}
           <button 
             onClick={() => setIsFeedbackOpen(true)}
             className="flex items-center space-x-3 w-full p-3 rounded-xl text-gray-400 hover:bg-zblack-800 hover:text-zgold-500 transition-colors"
@@ -215,39 +223,15 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 h-screen">
         <div className="max-w-5xl mx-auto pb-20 md:pb-0">
-          {currentView === 'dashboard' && (
-            <Dashboard 
-              user={currentUser} 
-              onOpenPremium={() => setIsPremiumModalOpen(true)}
-            />
-          )}
-          {currentView === 'assets' && (
-            <Assets 
-              user={currentUser} 
-              onOpenPremium={() => setIsPremiumModalOpen(true)}
-            />
-          )}
-          {currentView === 'simulator' && (
-            <Simulator 
-              user={currentUser} 
-              onOpenPremium={() => setIsPremiumModalOpen(true)} 
-            />
-          )}
-          {currentView === 'news' && <News onArticleClick={handleArticleClick} />}
-          {currentView === 'news-detail' && selectedArticle && (
-            <NewsDetail 
-              article={selectedArticle} 
-              onBack={() => setCurrentView('news')}
-              onArticleClick={handleArticleClick}
-            />
-          )}
-          {currentView === 'profile' && (
-            <Profile 
-              user={currentUser} 
-              onUpdateUser={handleUpdateUser} 
-              onOpenPremium={() => setIsPremiumModalOpen(true)}
-            />
-          )}
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard user={currentUser} onOpenPremium={() => setIsPremiumModalOpen(true)} />} />
+            <Route path="/assets" element={<Assets user={currentUser} onOpenPremium={() => setIsPremiumModalOpen(true)} />} />
+            <Route path="/simulator" element={<Simulator user={currentUser} onOpenPremium={() => setIsPremiumModalOpen(true)} />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/news/:id" element={<NewsDetail />} />
+            <Route path="/profile" element={<Profile user={currentUser} onUpdateUser={handleUpdateUser} onOpenPremium={() => setIsPremiumModalOpen(true)} />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </div>
       </main>
 
@@ -337,12 +321,10 @@ const App: React.FC = () => {
       {/* PREMIUM UPGRADE MODAL */}
       {isPremiumModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-           {/* Confetti effect background if success */}
            {upgradeSuccess && <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>}
 
            <div className="bg-gradient-to-br from-zblack-900 to-zblack-950 border border-zgold-500/30 w-full max-w-lg rounded-3xl p-0 shadow-2xl relative overflow-hidden flex flex-col">
               
-              {/* Decorative Gold Glow */}
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-zgold-500 to-transparent"></div>
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-zgold-500/10 rounded-full blur-3xl"></div>
 

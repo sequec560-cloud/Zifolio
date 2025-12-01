@@ -1,10 +1,11 @@
-import { User, Feedback, Asset, Task } from '../types';
-import { MOCK_ASSETS } from '../constants';
+import { User, Feedback, Asset, Task, Transaction } from '../types';
+import { MOCK_ASSETS, MOCK_TRANSACTIONS } from '../constants';
 
 const USERS_KEY = 'zifolio_users_db';
 const FEEDBACK_KEY = 'zifolio_feedback_db';
 const ASSETS_KEY = 'zifolio_assets_db';
 const TASKS_KEY = 'zifolio_tasks_db';
+const TRANSACTIONS_KEY = 'zifolio_transactions_db';
 
 // Helper to safely parse JSON
 const safeJsonParse = <T>(key: string, fallback: T): T => {
@@ -151,6 +152,37 @@ export const db = {
     return updatedUser;
   },
 
+  // --- TRANSACTIONS ---
+
+  getUserTransactions: (userId: string): Transaction[] => {
+    const allTransactions = safeJsonParse<Transaction[]>(TRANSACTIONS_KEY, []);
+    let userTransactions = allTransactions.filter(t => t.userId === userId);
+
+    // Seed mock transactions if user is mock user and list is empty
+    if (userId === 'mock-user-1' && userTransactions.length === 0) {
+       const seeded = MOCK_TRANSACTIONS.map(t => ({...t, userId: 'mock-user-1'}));
+       db.addTransaction(seeded[0]); // Add individually to trigger save
+       db.addTransaction(seeded[1]);
+       db.addTransaction(seeded[2]);
+       return seeded;
+    }
+    
+    return userTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  },
+
+  addTransaction: (transaction: Omit<Transaction, 'id'>): Transaction => {
+    const allTransactions = safeJsonParse<Transaction[]>(TRANSACTIONS_KEY, []);
+    
+    const newTx: Transaction = {
+        ...transaction,
+        id: Math.random().toString(36).substr(2, 9),
+    };
+
+    allTransactions.push(newTx);
+    localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(allTransactions));
+    return newTx;
+  },
+
   // --- ASSETS ---
 
   getAllAssets: (): Asset[] => {
@@ -164,7 +196,6 @@ export const db = {
     // Seed data for the Mock User if empty
     if (userId === 'mock-user-1' && userAssets.length === 0) {
       const seededAssets = MOCK_ASSETS.map(a => ({ ...a, userId: 'mock-user-1' }));
-      // Save seeded assets
       localStorage.setItem(ASSETS_KEY, JSON.stringify([...allAssets, ...seededAssets]));
       return seededAssets;
     }
@@ -176,21 +207,66 @@ export const db = {
     const allAssets = db.getAllAssets();
     allAssets.push(asset);
     localStorage.setItem(ASSETS_KEY, JSON.stringify(allAssets));
+
+    // GENERATE TRANSACTION: BUY
+    db.addTransaction({
+        userId: asset.userId,
+        type: 'buy',
+        assetName: asset.name,
+        amount: asset.investedAmount,
+        date: asset.purchaseDate || new Date().toISOString().split('T')[0]
+    });
   },
 
   updateAsset: (updatedAsset: Asset): void => {
     const allAssets = db.getAllAssets();
     const index = allAssets.findIndex(a => a.id === updatedAsset.id);
+    
     if (index !== -1) {
+      const oldAsset = allAssets[index];
       allAssets[index] = updatedAsset;
       localStorage.setItem(ASSETS_KEY, JSON.stringify(allAssets));
+
+      // GENERATE TRANSACTION: BUY OR SELL based on difference
+      const diff = updatedAsset.investedAmount - oldAsset.investedAmount;
+      if (diff > 0) {
+          db.addTransaction({
+              userId: updatedAsset.userId,
+              type: 'buy',
+              assetName: updatedAsset.name,
+              amount: diff,
+              date: new Date().toISOString().split('T')[0]
+          });
+      } else if (diff < 0) {
+          db.addTransaction({
+              userId: updatedAsset.userId,
+              type: 'sell',
+              assetName: updatedAsset.name,
+              amount: Math.abs(diff),
+              date: new Date().toISOString().split('T')[0]
+          });
+      }
     }
   },
 
   deleteAsset: (assetId: string): void => {
     let allAssets = db.getAllAssets();
+    const asset = allAssets.find(a => a.id === assetId);
+    
     allAssets = allAssets.filter(a => a.id !== assetId);
     localStorage.setItem(ASSETS_KEY, JSON.stringify(allAssets));
+
+    // GENERATE TRANSACTION: SELL (Liquidation)
+    if (asset) {
+        const valueAtExit = asset.quantity * asset.currentPriceUnit;
+        db.addTransaction({
+            userId: asset.userId,
+            type: 'sell',
+            assetName: asset.name,
+            amount: valueAtExit,
+            date: new Date().toISOString().split('T')[0]
+        });
+    }
   },
 
   // --- TASKS ---

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Trash2, Edit2, MoreVertical, AlertTriangle, Lock, History, Wallet, ArrowDownRight, ArrowUpRight, Percent } from 'lucide-react';
-import { formatKz, MOCK_TRANSACTIONS } from '../constants';
-import { Asset, AssetType, User } from '../types';
+import { formatKz } from '../constants';
+import { Asset, AssetType, User, Transaction } from '../types';
 import { db } from '../services/db';
 
 interface AssetsProps {
@@ -12,6 +12,7 @@ interface AssetsProps {
 const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
   const [activeTab, setActiveTab] = useState<'portfolio' | 'history'>('portfolio');
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
@@ -21,12 +22,19 @@ const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
   
   const isPremium = user.plan === 'Premium';
 
-  // Load assets on mount
+  // Load assets and transactions on mount
   useEffect(() => {
     if (user) {
       setAssets(db.getUserAssets(user.id));
+      setTransactions(db.getUserTransactions(user.id));
     }
   }, [user]);
+
+  // Refresh data helper
+  const refreshData = () => {
+      setAssets(db.getUserAssets(user.id));
+      setTransactions(db.getUserTransactions(user.id));
+  };
 
   // New Asset Form State
   const initialFormState = {
@@ -50,7 +58,7 @@ const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
   const confirmDelete = () => {
     if (assetToDelete) {
       db.deleteAsset(assetToDelete);
-      setAssets(assets.filter(a => a.id !== assetToDelete));
+      refreshData();
       setIsDeleteModalOpen(false);
       setAssetToDelete(null);
     }
@@ -108,10 +116,6 @@ const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
       };
       
       db.updateAsset(updatedAsset);
-      
-      setAssets(assets.map(asset => 
-        asset.id === editingId ? updatedAsset : asset
-      ));
     } else {
       // Create new asset
       if (!isPremium && assets.length >= 3) {
@@ -134,9 +138,9 @@ const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
       };
       
       db.saveAsset(assetToAdd);
-      setAssets([...assets, assetToAdd]);
     }
 
+    refreshData();
     closeModal();
   };
 
@@ -182,9 +186,9 @@ const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
         </div>
 
         {activeTab === 'portfolio' && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
              {!isPremium && (
-               <span className="text-xs text-gray-500 border border-zblack-800 px-3 py-1 rounded-full">
+               <span className="text-xs text-gray-500 border border-zblack-800 px-3 py-1 rounded-full hidden sm:block">
                  Plano Free: {assets.length}/3 ativos
                </span>
              )}
@@ -211,8 +215,71 @@ const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
             />
           </div>
 
-          {/* Assets Grid/List */}
-          <div className="bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden">
+          {/* ASSETS: MOBILE CARD VIEW (Visible on small screens) */}
+          <div className="md:hidden space-y-4">
+            {assets.length === 0 ? (
+               <div className="p-8 text-center text-gray-500 bg-zblack-900 rounded-2xl border border-zblack-800">
+                 Nenhum ativo encontrado.
+               </div>
+            ) : (
+              assets.map(asset => {
+                const currentValue = asset.quantity * asset.currentPriceUnit;
+                const profit = currentValue - asset.investedAmount;
+                const profitPercent = asset.investedAmount > 0 ? (profit / asset.investedAmount) * 100 : 0;
+                
+                return (
+                  <div key={asset.id} className="bg-zblack-900 border border-zblack-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                     <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="font-bold text-white text-lg font-mono">{asset.name}</p>
+                          <span className="bg-zblack-950 px-2 py-0.5 rounded text-xs text-gray-400 mt-1 inline-block">
+                             {asset.typology || asset.type}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => handleEdit(asset)}
+                                className="p-2 bg-zblack-950 rounded-lg text-gray-400 hover:text-white"
+                            >
+                                <Edit2 size={16} />
+                            </button>
+                            <button 
+                                onClick={() => initiateDelete(asset.id)}
+                                className="p-2 bg-red-500/10 rounded-lg text-red-500"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                     </div>
+                     
+                     <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                           <p className="text-xs text-gray-500">Valor Investido</p>
+                           <p className="font-mono text-gray-300">{formatKz(asset.investedAmount)}</p>
+                        </div>
+                        <div>
+                           <p className="text-xs text-gray-500">Valor Atual</p>
+                           <p className="font-mono text-white font-bold">{formatKz(currentValue)}</p>
+                        </div>
+                        <div>
+                           <p className="text-xs text-gray-500">Rentabilidade</p>
+                           <p className={`text-sm font-bold ${profitPercent >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                              {profitPercent > 0 ? '+' : ''}{profitPercent.toFixed(1)}%
+                           </p>
+                        </div>
+                        <div>
+                           <p className="text-xs text-gray-500">Data Compra</p>
+                           <p className="text-sm text-gray-300">{asset.purchaseDate}</p>
+                        </div>
+                     </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* ASSETS: DESKTOP TABLE VIEW (Hidden on small screens) */}
+          <div className="hidden md:block bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-zblack-950 border-b border-zblack-800">
@@ -288,7 +355,7 @@ const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
           </div>
         </>
       ) : (
-        /* History View */
+        /* History View (Real Transactions) */
         <div className="bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden animate-in fade-in duration-300">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -302,8 +369,8 @@ const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zblack-800">
-                {MOCK_TRANSACTIONS.length > 0 ? (
-                  MOCK_TRANSACTIONS.map((tx) => {
+                {transactions.length > 0 ? (
+                  transactions.map((tx) => {
                     const style = getTransactionStyle(tx.type);
                     const Icon = style.icon;
 

@@ -28,6 +28,7 @@ export interface PortfolioSummary {
 
 export interface Transaction {
   id: string;
+  userId: string;
   type: 'buy' | 'sell' | 'interest';
   assetName: string;
   amount: number;

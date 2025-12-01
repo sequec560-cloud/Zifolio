@@ -51,6 +51,7 @@ export const MOCK_ASSETS: Asset[] = [
 export const MOCK_TRANSACTIONS: Transaction[] = [
   {
     id: 't1',
+    userId: 'mock-user-1',
     type: 'buy',
     assetName: 'OT-NR-2026',
     amount: 1500000,
@@ -58,6 +59,7 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: 't2',
+    userId: 'mock-user-1',
     type: 'interest',
     assetName: 'OT-NR-2026',
     amount: 123750,
@@ -65,6 +67,7 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: 't3',
+    userId: 'mock-user-1',
     type: 'buy',
     assetName: 'Sonangol 2027',
     amount: 800000,
