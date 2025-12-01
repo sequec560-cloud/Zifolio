@@ -24,7 +24,12 @@ export const db = {
       ...user,
       id: Math.random().toString(36).substr(2, 9),
       createdAt: new Date().toISOString(),
-      plan: 'Free'
+      plan: 'Free',
+      notificationSettings: {
+        enabled: true,
+        dropThreshold: 10,
+        gainThreshold: 15
+      }
     };
 
     users.push(newUser);
@@ -148,7 +153,12 @@ export const db = {
       password: 'password',
       phone: '+244 923 456 789',
       plan: 'Premium',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      notificationSettings: {
+        enabled: true,
+        dropThreshold: 10,
+        gainThreshold: 15
+      }
     };
   }
 };

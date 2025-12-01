@@ -62,6 +62,11 @@ export interface User {
   plan?: 'Free' | 'Premium';
   planExpiryDate?: string; // ISO Date
   createdAt: string;
+  notificationSettings?: {
+    enabled: boolean;
+    dropThreshold: number;
+    gainThreshold: number;
+  };
 }
 
 export interface Feedback {

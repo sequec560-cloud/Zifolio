@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle } from 'lucide-react';
+import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle, Key } from 'lucide-react';
 import { User } from '../types';
 
 interface ProfileProps {
@@ -13,18 +13,36 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
-  // Sync tempProfile if user prop changes (e.g. external updates)
-  useEffect(() => {
-    setTempProfile(user);
-  }, [user]);
+  // Password Change State
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Settings State
-  const [alertsEnabled, setAlertsEnabled] = useState(true);
-  const [dropThreshold, setDropThreshold] = useState(10);
-  const [gainThreshold, setGainThreshold] = useState(15);
+  const [alertsEnabled, setAlertsEnabled] = useState(user.notificationSettings?.enabled ?? true);
+  const [dropThreshold, setDropThreshold] = useState(user.notificationSettings?.dropThreshold ?? 10);
+  const [gainThreshold, setGainThreshold] = useState(user.notificationSettings?.gainThreshold ?? 15);
   const [isSaved, setIsSaved] = useState(false);
 
+  // Sync tempProfile and settings if user prop changes (e.g. external updates)
+  useEffect(() => {
+    setTempProfile(user);
+    if (user.notificationSettings) {
+      setAlertsEnabled(user.notificationSettings.enabled);
+      setDropThreshold(user.notificationSettings.dropThreshold);
+      setGainThreshold(user.notificationSettings.gainThreshold);
+    }
+  }, [user]);
+
   const handleSaveSettings = () => {
+    onUpdateUser({
+      ...user,
+      notificationSettings: {
+        enabled: alertsEnabled,
+        dropThreshold,
+        gainThreshold
+      }
+    });
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };
@@ -33,6 +51,12 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
     setTempProfile(user);
     setEditError(null); // Clear previous errors
     setIsEditModalOpen(true);
+  };
+
+  const handleOpenPasswordModal = () => {
+    setPasswordData({ newPassword: '', confirmPassword: '' });
+    setPasswordError(null);
+    setIsPasswordModalOpen(true);
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -63,6 +87,27 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
 
     onUpdateUser(tempProfile);
     setIsEditModalOpen(false);
+  };
+
+  const handleSavePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('As senhas não coincidem.');
+      return;
+    }
+
+    // Update user with new password
+    onUpdateUser({ ...user, password: passwordData.newPassword });
+    setIsPasswordModalOpen(false);
+    // Trigger generic save success visual
+    handleSaveSettings();
   };
 
   const SettingItem = ({ icon: Icon, title, desc, onClick }: { icon: any, title: string, desc: string, onClick?: () => void }) => (
@@ -125,6 +170,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
               icon={Shield} 
               title="Segurança" 
               desc="Alterar senha, 2FA" 
+              onClick={handleOpenPasswordModal}
             />
             <SettingItem 
               icon={Bell} 
@@ -319,6 +365,79 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
                   className="flex-1 bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20"
                 >
                   Salvar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Password Change Modal */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zblack-900 border border-zblack-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Shield size={20} className="text-zgold-500" /> Alterar Senha
+              </h3>
+              <button 
+                onClick={() => setIsPasswordModalOpen(false)} 
+                className="text-gray-400 hover:text-white p-2 hover:bg-zblack-800 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Error Alert */}
+            {passwordError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center gap-2 text-red-500 text-xs font-medium animate-in slide-in-from-top-1">
+                <AlertCircle size={14} className="flex-shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+            
+            <form onSubmit={handleSavePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1 flex items-center gap-2">
+                  <Key size={12} /> Nova Senha
+                </label>
+                <input 
+                  type="password" 
+                  value={passwordData.newPassword}
+                  onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})}
+                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1 flex items-center gap-2">
+                  <Key size={12} /> Confirmar Senha
+                </label>
+                <input 
+                  type="password" 
+                  value={passwordData.confirmPassword}
+                  onChange={e => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  placeholder="Repita a nova senha"
+                  required
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  className="flex-1 bg-zblack-950 hover:bg-zblack-800 text-gray-300 font-bold py-3 rounded-xl transition-colors border border-zblack-800"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20"
+                >
+                  Atualizar Senha
                 </button>
               </div>
             </form>

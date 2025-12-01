@@ -31,6 +31,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
     investedAmount: 0,
     interestRate: 0,
     quantity: 1,
+    currentPriceUnit: 0, // Added manual price input
     purchaseDate: new Date().toISOString().split('T')[0]
   };
 
@@ -58,6 +59,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
       investedAmount: asset.investedAmount,
       quantity: asset.quantity,
       interestRate: asset.interestRate,
+      currentPriceUnit: asset.currentPriceUnit, // Populate existing price
       purchaseDate: asset.purchaseDate,
     });
     setIsModalOpen(true);
@@ -73,8 +75,8 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
     e.preventDefault();
     if (!formData.name || !formData.investedAmount || !user) return;
 
-    // Calculate unit price based on inputs (MVP logic)
-    const currentPriceUnit = Number(formData.investedAmount) / Number(formData.quantity);
+    // Use manually entered current price, or default to 0 if not provided
+    const manualCurrentPrice = Number(formData.currentPriceUnit) || 0;
 
     if (editingId) {
       // Update existing asset
@@ -86,7 +88,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
         investedAmount: Number(formData.investedAmount),
         quantity: Number(formData.quantity),
         interestRate: Number(formData.interestRate),
-        currentPriceUnit: currentPriceUnit,
+        currentPriceUnit: manualCurrentPrice,
         purchaseDate: formData.purchaseDate!,
       };
       
@@ -105,7 +107,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
         investedAmount: Number(formData.investedAmount),
         quantity: Number(formData.quantity),
         interestRate: Number(formData.interestRate),
-        currentPriceUnit: currentPriceUnit,
+        currentPriceUnit: manualCurrentPrice,
         purchaseDate: formData.purchaseDate!,
       };
       
@@ -266,13 +268,38 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                   <label className="block text-xs font-medium text-gray-400 mb-1">Valor Total (Kz)</label>
+                   <label className="block text-xs font-medium text-gray-400 mb-1">Valor Total Investido (Kz)</label>
                    <input 
                       type="number"
                       value={formData.investedAmount}
                       onChange={e => setFormData({...formData, investedAmount: Number(e.target.value)})}
                       className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
                       min="0"
+                      required
+                   />
+                </div>
+                 <div>
+                   <label className="block text-xs font-medium text-gray-400 mb-1">Preço Atual (Unitário)</label>
+                   <input 
+                      type="number"
+                      value={formData.currentPriceUnit}
+                      onChange={e => setFormData({...formData, currentPriceUnit: Number(e.target.value)})}
+                      className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
+                      min="0"
+                      required
+                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                   <label className="block text-xs font-medium text-gray-400 mb-1">Quantidade</label>
+                   <input 
+                      type="number"
+                      value={formData.quantity}
+                      onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
+                      className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
+                      min="1"
                       required
                    />
                 </div>
@@ -289,18 +316,6 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                    />
                 </div>
               </div>
-
-              <div>
-                   <label className="block text-xs font-medium text-gray-400 mb-1">Quantidade</label>
-                   <input 
-                      type="number"
-                      value={formData.quantity}
-                      onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
-                      className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
-                      min="1"
-                      required
-                   />
-                </div>
 
               <div className="pt-4">
                 <button 

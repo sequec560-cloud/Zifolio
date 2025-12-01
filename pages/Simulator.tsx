@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatKz } from '../constants';
-import { Info, Crown, Calendar, ArrowRight } from 'lucide-react';
+import { Info, Crown, Calendar, ArrowRight, Target, Clock, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { User } from '../types';
 
@@ -8,41 +8,153 @@ interface SimulatorProps {
   user: User;
 }
 
+type CompoundingFrequency = 12 | 4 | 1; // Monthly, Quarterly, Annually
+type CalculationMode = 'growth' | 'goal';
+
 const Simulator: React.FC<SimulatorProps> = ({ user }) => {
+  // Modes & Configuration
+  const [mode, setMode] = useState<CalculationMode>('growth');
+  const [frequency, setFrequency] = useState<CompoundingFrequency>(12); // Default Monthly
+
+  // Inputs
   const [amount, setAmount] = useState(1000000);
   const [rate, setRate] = useState(16.5);
   const [years, setYears] = useState(3);
+  const [targetAmount, setTargetAmount] = useState(2000000);
+
+  // Results
   const [projection, setProjection] = useState<any[]>([]);
   const [totalReturns, setTotalReturns] = useState(0);
+  const [finalValue, setFinalValue] = useState(0);
+  const [timeResult, setTimeResult] = useState<{years: number, months: number} | null>(null);
+
+  // Constants for dropdowns
+  const frequencies = [
+    { label: 'Mensal', value: 12 },
+    { label: 'Trimestral', value: 4 },
+    { label: 'Anual', value: 1 },
+  ];
 
   useEffect(() => {
-    calculateProjection();
-  }, [amount, rate, years]);
-
-  const calculateProjection = () => {
-    const data = [];
-    let currentAmount = amount;
-    const monthlyRate = rate / 100 / 12;
-    const totalMonths = years * 12;
-
-    for (let i = 0; i <= totalMonths; i++) {
-      data.push({
-        month: i,
-        value: Math.round(currentAmount)
-      });
-      currentAmount = currentAmount * (1 + monthlyRate);
+    if (mode === 'growth') {
+      calculateGrowth();
+    } else {
+      calculateTimeNeeded();
     }
+  }, [amount, rate, years, frequency, targetAmount, mode]);
+
+  const calculateGrowth = () => {
+    const data = [];
+    const monthlyRate = rate / 100 / frequency; // Rate per period
+    const totalPeriods = years * frequency;
+    
+    let currentAmount = amount;
+
+    // We still want to plot monthly for the chart to look smooth, 
+    // but the compounding happens according to frequency
+    for (let m = 0; m <= years * 12; m++) {
+      // Calculate value at this month
+      // Formula: A = P * (1 + r/n)^(n*t)
+      const t = m / 12; // Time in years
+      const val = amount * Math.pow((1 + (rate / 100 / frequency)), (frequency * t));
+      
+      data.push({
+        month: m,
+        value: Math.round(val)
+      });
+    }
+
+    const final = amount * Math.pow((1 + (rate / 100 / frequency)), totalPeriods);
+    
     setProjection(data);
-    setTotalReturns(currentAmount - amount);
+    setFinalValue(final);
+    setTotalReturns(final - amount);
+    setTimeResult(null);
+  };
+
+  const calculateTimeNeeded = () => {
+    if (targetAmount <= amount) {
+        setProjection([]);
+        setFinalValue(amount);
+        setTotalReturns(0);
+        setTimeResult({ years: 0, months: 0 });
+        return;
+    }
+
+    // Formula: t = ln(A/P) / (n * ln(1 + r/n))
+    // A = Target, P = Principal, r = annual rate decimal, n = frequency
+    const r = rate / 100;
+    const n = frequency;
+    
+    const numerator = Math.log(targetAmount / amount);
+    const denominator = n * Math.log(1 + (r / n));
+    
+    const yearsNeeded = numerator / denominator;
+    
+    // Convert to Years + Months for display
+    const wholeYears = Math.floor(yearsNeeded);
+    const remainderMonths = Math.round((yearsNeeded - wholeYears) * 12);
+    
+    setTimeResult({ years: wholeYears, months: remainderMonths });
+    setFinalValue(targetAmount);
+    setTotalReturns(targetAmount - amount);
+
+    // Generate Chart Data up to that time
+    const data = [];
+    const totalMonths = Math.ceil(yearsNeeded * 12);
+    
+    // Limit chart points for performance if result is crazy high (e.g. 100 years)
+    const step = totalMonths > 120 ? Math.ceil(totalMonths / 60) : 1; 
+
+    for (let m = 0; m <= totalMonths; m += step) {
+        const t = m / 12;
+        const val = amount * Math.pow((1 + (r / n)), (n * t));
+        data.push({
+            month: m,
+            value: Math.round(val)
+        });
+    }
+    // Ensure last point hits exactly
+    if (data[data.length-1].month !== totalMonths) {
+        data.push({ month: totalMonths, value: targetAmount });
+    }
+
+    setProjection(data);
   };
 
   const isPremium = user.plan === 'Premium';
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-white">Simulador de Investimento</h2>
-        <p className="text-gray-400 mt-2">Projete os seus ganhos com base nas taxas atuais da BODIVA.</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <div>
+            <h2 className="text-3xl font-bold text-white">Simulador de Investimento</h2>
+            <p className="text-gray-400 mt-2">Planeje o seu futuro financeiro com precisão.</p>
+        </div>
+        
+        {/* Mode Toggle */}
+        <div className="bg-zblack-900 border border-zblack-800 p-1 rounded-xl flex">
+            <button
+                onClick={() => setMode('growth')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                    mode === 'growth' 
+                    ? 'bg-zgold-500 text-black shadow-lg' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+            >
+                Simular Rendimento
+            </button>
+            <button
+                onClick={() => setMode('goal')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                    mode === 'goal' 
+                    ? 'bg-zgold-500 text-black shadow-lg' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+            >
+                Simular Meta
+            </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -51,10 +163,11 @@ const Simulator: React.FC<SimulatorProps> = ({ user }) => {
         <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl h-fit">
           <h3 className="font-bold text-white mb-6 flex items-center gap-2">
              <span className="w-1 h-6 bg-zgold-500 rounded-full"></span>
-             Parâmetros
+             Configuração
           </h3>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
+            {/* Amount Input */}
             <div>
               <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
                 <span>Investimento Inicial</span>
@@ -71,6 +184,7 @@ const Simulator: React.FC<SimulatorProps> = ({ user }) => {
               />
             </div>
 
+            {/* Rate Input */}
             <div>
               <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
                 <span>Taxa Anual (%)</span>
@@ -91,26 +205,72 @@ const Simulator: React.FC<SimulatorProps> = ({ user }) => {
               </p>
             </div>
 
+            {/* Compounding Frequency */}
             <div>
-              <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
-                <span>Prazo (Anos)</span>
-                <span className="text-zgold-500 font-mono">{years} Anos</span>
-              </label>
-              <div className="flex gap-2 mt-2">
-                {[1, 2, 3, 5, 10].map(y => (
-                  <button
-                    key={y}
-                    onClick={() => setYears(y)}
-                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                      years === y 
-                        ? 'bg-zgold-500 text-black font-bold' 
-                        : 'bg-zblack-950 text-gray-400 hover:text-white border border-zblack-800'
-                    }`}
-                  >
-                    {y}
-                  </button>
-                ))}
-              </div>
+                 <label className="block text-sm font-medium text-gray-400 mb-3">Capitalização dos Juros</label>
+                 <div className="grid grid-cols-3 gap-2">
+                    {frequencies.map((freq) => (
+                        <button
+                            key={freq.value}
+                            onClick={() => setFrequency(freq.value as CompoundingFrequency)}
+                            className={`py-2 px-1 rounded-lg text-xs font-medium border transition-colors ${
+                                frequency === freq.value
+                                ? 'bg-zgold-500/20 text-zgold-500 border-zgold-500'
+                                : 'bg-zblack-950 text-gray-400 border-zblack-800 hover:border-gray-600'
+                            }`}
+                        >
+                            {freq.label}
+                        </button>
+                    ))}
+                 </div>
+            </div>
+
+            <div className="border-t border-zblack-800 pt-6">
+                {mode === 'growth' ? (
+                    /* Years Input (Growth Mode) */
+                    <div>
+                        <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
+                            <span>Prazo do Investimento</span>
+                            <span className="text-zgold-500 font-mono">{years} Anos</span>
+                        </label>
+                        <div className="flex gap-2 mt-2">
+                            {[1, 2, 3, 5, 10].map(y => (
+                            <button
+                                key={y}
+                                onClick={() => setYears(y)}
+                                className={`flex-1 py-2 rounded-lg text-sm transition-colors border ${
+                                years === y 
+                                    ? 'bg-white text-black font-bold border-white' 
+                                    : 'bg-zblack-950 text-gray-400 hover:text-white border-zblack-800'
+                                }`}
+                            >
+                                {y}
+                            </button>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    /* Target Amount Input (Goal Mode) */
+                    <div>
+                        <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
+                            <span className="flex items-center gap-2"><Target size={14}/> Objetivo Financeiro</span>
+                            <span className="text-zgold-500 font-mono">{formatKz(targetAmount)}</span>
+                        </label>
+                         <input 
+                            type="range" 
+                            min={amount} 
+                            max={amount * 10} 
+                            step="100000"
+                            value={targetAmount}
+                            onChange={(e) => setTargetAmount(Number(e.target.value))}
+                            className="w-full h-2 bg-zblack-800 rounded-lg appearance-none cursor-pointer accent-zgold-500"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-2">
+                            <span>Min: {formatKz(amount)}</span>
+                            <span>Max: {formatKz(amount * 10)}</span>
+                        </div>
+                    </div>
+                )}
             </div>
           </div>
         </div>
@@ -159,7 +319,16 @@ const Simulator: React.FC<SimulatorProps> = ({ user }) => {
 
            {/* Chart */}
            <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
-              <h3 className="font-bold text-white mb-4">Projeção de Crescimento</h3>
+              <h3 className="font-bold text-white mb-4 flex justify-between items-center">
+                  <span>
+                      {mode === 'growth' ? 'Projeção de Crescimento' : 'Trajetória até o Objetivo'}
+                  </span>
+                  {mode === 'goal' && timeResult && (
+                      <span className="text-sm font-normal text-zgold-500 bg-zgold-500/10 px-3 py-1 rounded-full border border-zgold-500/20">
+                          {timeResult.years} anos e {timeResult.months} meses
+                      </span>
+                  )}
+              </h3>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={projection}>
@@ -174,7 +343,7 @@ const Simulator: React.FC<SimulatorProps> = ({ user }) => {
                       formatter={(value: number) => [formatKz(value), "Valor"]}
                       labelFormatter={(label) => `Mês ${label}`}
                     />
-                    <XAxis dataKey="month" stroke="#333" tick={{fontSize: 12}} />
+                    <XAxis dataKey="month" stroke="#333" tick={{fontSize: 12}} minTickGap={30} />
                     <YAxis hide domain={['dataMin', 'auto']} />
                     <Area 
                       type="monotone" 
@@ -183,28 +352,48 @@ const Simulator: React.FC<SimulatorProps> = ({ user }) => {
                       strokeWidth={3} 
                       fillOpacity={1} 
                       fill="url(#colorSimulator)" 
+                      animationDuration={1000}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
            </div>
 
-           {/* Results - Below the chart */}
+           {/* Results Cards */}
            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors">
-                <p className="text-gray-400 text-xs uppercase tracking-wide">Total Investido</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wide flex items-center gap-2">
+                    <TrendingUp size={14}/> Total Investido
+                </p>
                 <p className="text-2xl font-bold text-white mt-1 font-mono tracking-tight">{formatKz(amount)}</p>
               </div>
               
               <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors">
-                <p className="text-gray-400 text-xs uppercase tracking-wide">Estimativa de Juros</p>
-                <p className="text-2xl font-bold text-green-500 mt-1 font-mono tracking-tight">+{formatKz(totalReturns)}</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wide flex items-center gap-2">
+                    {mode === 'growth' ? <TrendingUp size={14} className="text-green-500"/> : <Clock size={14} className="text-green-500"/>}
+                    {mode === 'growth' ? 'Lucro Estimado' : 'Tempo Estimado'}
+                </p>
+                {mode === 'growth' ? (
+                     <p className="text-2xl font-bold text-green-500 mt-1 font-mono tracking-tight">+{formatKz(totalReturns)}</p>
+                ) : (
+                    <div className="mt-1">
+                        <p className="text-2xl font-bold text-green-500 font-mono leading-none">
+                            {timeResult ? timeResult.years : 0} <span className="text-sm text-gray-500">anos</span>
+                        </p>
+                        <p className="text-sm text-gray-400">
+                             {timeResult ? timeResult.months : 0} meses
+                        </p>
+                    </div>
+                )}
+               
               </div>
 
               <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-zgold-500/10 rounded-full blur-xl"></div>
-                <p className="text-zgold-500 text-xs uppercase tracking-wide font-bold">Valor Final Estimado</p>
-                <p className="text-2xl font-bold text-white mt-1 font-mono tracking-tight">{formatKz(amount + totalReturns)}</p>
+                <p className="text-zgold-500 text-xs uppercase tracking-wide font-bold flex items-center gap-2">
+                    <Target size={14}/> {mode === 'growth' ? 'Valor Final' : 'Meta Alvo'}
+                </p>
+                <p className="text-2xl font-bold text-white mt-1 font-mono tracking-tight">{formatKz(finalValue)}</p>
               </div>
            </div>
         </div>
