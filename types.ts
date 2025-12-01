@@ -8,8 +8,9 @@ export enum AssetType {
 export interface Asset {
   id: string;
   userId: string; // Linked to User
-  name: string; // e.g., "OT-NR-2025"
-  type: AssetType;
+  name: string; // e.g., "OT-NR-2025" -> Renamed to "Código de Negociação" in UI
+  typology: string; // New field: e.g., "UP", "FIS", "Ações"
+  type: AssetType; // Internal category for logic/charts
   purchaseDate: string;
   investedAmount: number; // In AKZ
   quantity: number;
@@ -75,6 +76,14 @@ export interface Feedback {
   userId: string;
   type: 'suggestion' | 'bug' | 'other';
   message: string;
+  createdAt: string;
+}
+
+export interface Task {
+  id: string;
+  userId: string;
+  title: string;
+  completed: boolean;
   createdAt: string;
 }
 

@@ -10,7 +10,12 @@ import {
   Calendar,
   Percent,
   ShieldAlert,
-  BarChart2
+  BarChart2,
+  ListTodo,
+  Plus,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -26,7 +31,7 @@ import {
   Bar
 } from 'recharts';
 import { MOCK_TRANSACTIONS, MARKET_INDICATORS, formatKz } from '../constants';
-import { User, AssetType, Asset } from '../types';
+import { User, AssetType, Asset, Task } from '../types';
 import { db } from '../services/db';
 
 interface DashboardProps {
@@ -35,14 +40,46 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Load assets for the current user
     const userAssets = db.getUserAssets(user.id);
     setAssets(userAssets);
+    
+    // Load tasks for current user
+    const userTasks = db.getUserTasks(user.id);
+    setTasks(userTasks);
+
     setLoading(false);
   }, [user.id]);
+
+  // Task Handlers
+  const handleAddTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim()) return;
+
+    const newTask = db.addTask({
+      userId: user.id,
+      title: newTaskTitle,
+      completed: false
+    });
+
+    setTasks([...tasks, newTask]);
+    setNewTaskTitle('');
+  };
+
+  const handleToggleTask = (taskId: string) => {
+    db.toggleTask(taskId);
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    db.deleteTask(taskId);
+    setTasks(tasks.filter(t => t.id !== taskId));
+  };
 
   // Aggregate calculations based on REAL data
   const totalInvested = assets.reduce((acc, curr) => acc + curr.investedAmount, 0);
@@ -445,32 +482,99 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         </div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-white">Movimentos Recentes</h3>
-          <button className="text-zgold-500 text-sm hover:underline">Ver todos</button>
+      {/* Grid for Recent Transactions & Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Transactions */}
+        <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl h-full">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-white">Movimentos Recentes</h3>
+            <button className="text-zgold-500 text-sm hover:underline">Ver todos</button>
+          </div>
+          <div className="space-y-4">
+            {MOCK_TRANSACTIONS.map((t) => (
+              <div key={t.id} className="flex justify-between items-center p-3 hover:bg-zblack-950 rounded-xl transition-colors cursor-pointer group/item">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-full ${t.type === 'buy' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                    {t.type === 'buy' ? <TrendingDown size={20} /> : <TrendingUp size={20} />}
+                  </div>
+                  <div>
+                    <p className="font-medium text-white group-hover/item:text-zgold-500 transition-colors">{t.assetName}</p>
+                    <p className="text-xs text-gray-500 capitalize">{t.type === 'interest' ? 'Pagamento de Juros' : t.type === 'buy' ? 'Compra' : 'Venda'}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`font-bold ${t.type === 'buy' ? 'text-white' : 'text-green-500'}`}>
+                    {t.type === 'buy' ? '-' : '+'}{formatKz(t.amount)}
+                  </p>
+                  <p className="text-xs text-gray-500">{t.date}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="space-y-4">
-          {MOCK_TRANSACTIONS.map((t) => (
-            <div key={t.id} className="flex justify-between items-center p-3 hover:bg-zblack-950 rounded-xl transition-colors cursor-pointer group/item">
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-full ${t.type === 'buy' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                  {t.type === 'buy' ? <TrendingDown size={20} /> : <TrendingUp size={20} />}
-                </div>
-                <div>
-                  <p className="font-medium text-white group-hover/item:text-zgold-500 transition-colors">{t.assetName}</p>
-                  <p className="text-xs text-gray-500 capitalize">{t.type === 'interest' ? 'Pagamento de Juros' : t.type === 'buy' ? 'Compra' : 'Venda'}</p>
-                </div>
+
+        {/* Investment Tasks Widget */}
+        <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl h-full flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <ListTodo size={20} className="text-zgold-500"/>
+              Notas & Tarefas
+            </h3>
+          </div>
+          
+          <form onSubmit={handleAddTask} className="flex gap-2 mb-4">
+            <input 
+              type="text" 
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Ex: Verificar taxas LUIBOR..."
+              className="flex-1 bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-zgold-500 text-sm placeholder-gray-600"
+            />
+            <button 
+              type="submit"
+              disabled={!newTaskTitle.trim()}
+              className="bg-zgold-500 hover:bg-zgold-400 disabled:opacity-50 text-black p-2.5 rounded-xl transition-colors"
+            >
+              <Plus size={20} />
+            </button>
+          </form>
+
+          <div className="space-y-2 flex-1 overflow-y-auto max-h-[300px] pr-1 custom-scrollbar">
+            {tasks.length === 0 ? (
+              <div className="text-center text-gray-600 text-sm py-8 border border-dashed border-zblack-800 rounded-xl">
+                Nenhuma tarefa pendente.
               </div>
-              <div className="text-right">
-                <p className={`font-bold ${t.type === 'buy' ? 'text-white' : 'text-green-500'}`}>
-                  {t.type === 'buy' ? '-' : '+'}{formatKz(t.amount)}
-                </p>
-                <p className="text-xs text-gray-500">{t.date}</p>
-              </div>
-            </div>
-          ))}
+            ) : (
+              tasks.map((task) => (
+                <div 
+                  key={task.id} 
+                  className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                    task.completed 
+                    ? 'bg-zblack-950/50 border-transparent opacity-60' 
+                    : 'bg-zblack-950 border-zblack-800 hover:border-zgold-500/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                    <button 
+                      onClick={() => handleToggleTask(task.id)}
+                      className={`flex-shrink-0 transition-colors ${task.completed ? 'text-green-500' : 'text-gray-500 hover:text-white'}`}
+                    >
+                      {task.completed ? <CheckSquare size={20} /> : <Square size={20} />}
+                    </button>
+                    <span className={`text-sm truncate ${task.completed ? 'line-through text-gray-500' : 'text-gray-200'}`}>
+                      {task.title}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteTask(task.id)}
+                    className="text-gray-600 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors ml-2"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 

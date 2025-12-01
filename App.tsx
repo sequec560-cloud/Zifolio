@@ -100,12 +100,13 @@ const App: React.FC = () => {
     });
 
     setFeedbackSent(true);
+    // Increase timeout to 3 seconds for better UX
     setTimeout(() => {
       setFeedbackSent(false);
       setIsFeedbackOpen(false);
       setFeedbackMessage('');
       setFeedbackType('suggestion');
-    }, 2000);
+    }, 3000);
   };
 
   const NavItem = ({ view, icon: Icon, label }: { view: ViewState; icon: any; label: string }) => (
@@ -275,7 +276,7 @@ const App: React.FC = () => {
                    <Check size={32} />
                  </div>
                  <h4 className="text-lg font-bold text-white">Obrigado!</h4>
-                 <p className="text-gray-400">Seu feedback foi recebido com sucesso.</p>
+                 <p className="text-gray-400">Seu feedback foi recebido com sucesso!</p>
                </div>
             ) : (
               <form onSubmit={handleSubmitFeedback} className="space-y-4">

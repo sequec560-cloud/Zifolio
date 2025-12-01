@@ -1,9 +1,10 @@
-import { User, Feedback, Asset } from '../types';
+import { User, Feedback, Asset, Task } from '../types';
 import { MOCK_ASSETS } from '../constants';
 
 const USERS_KEY = 'zifolio_users_db';
 const FEEDBACK_KEY = 'zifolio_feedback_db';
 const ASSETS_KEY = 'zifolio_assets_db';
+const TASKS_KEY = 'zifolio_tasks_db';
 
 export const db = {
   // --- USERS ---
@@ -60,6 +61,35 @@ export const db = {
     }
     
     return user;
+  },
+
+  loginWithGoogle: (email: string, name: string, photoUrl?: string): User => {
+    const users = db.getUsers();
+    let user = users.find(u => u.email === email);
+
+    if (user) {
+      return user;
+    }
+
+    const newUser: User = {
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      email,
+      password: '', // External auth doesn't store password locally usually
+      phone: '',
+      photoUrl,
+      createdAt: new Date().toISOString(),
+      plan: 'Free',
+      notificationSettings: {
+        enabled: true,
+        dropThreshold: 10,
+        gainThreshold: 15
+      }
+    };
+
+    users.push(newUser);
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    return newUser;
   },
 
   checkEmailExists: (email: string): boolean => {
@@ -152,6 +182,52 @@ export const db = {
     let allAssets = db.getAllAssets();
     allAssets = allAssets.filter(a => a.id !== assetId);
     localStorage.setItem(ASSETS_KEY, JSON.stringify(allAssets));
+  },
+
+  // --- TASKS ---
+
+  getUserTasks: (userId: string): Task[] => {
+    const allTasksStr = localStorage.getItem(TASKS_KEY);
+    const allTasks: Task[] = allTasksStr ? JSON.parse(allTasksStr) : [];
+    return allTasks.filter(t => t.userId === userId);
+  },
+
+  addTask: (task: Omit<Task, 'id' | 'createdAt'>): Task => {
+    const allTasksStr = localStorage.getItem(TASKS_KEY);
+    const allTasks: Task[] = allTasksStr ? JSON.parse(allTasksStr) : [];
+    
+    const newTask: Task = {
+      ...task,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString()
+    };
+    
+    allTasks.push(newTask);
+    localStorage.setItem(TASKS_KEY, JSON.stringify(allTasks));
+    return newTask;
+  },
+
+  toggleTask: (taskId: string): Task[] => {
+    const allTasksStr = localStorage.getItem(TASKS_KEY);
+    if (!allTasksStr) return [];
+    
+    const allTasks: Task[] = JSON.parse(allTasksStr);
+    const index = allTasks.findIndex(t => t.id === taskId);
+    
+    if (index !== -1) {
+      allTasks[index].completed = !allTasks[index].completed;
+      localStorage.setItem(TASKS_KEY, JSON.stringify(allTasks));
+    }
+    return allTasks;
+  },
+
+  deleteTask: (taskId: string): void => {
+    const allTasksStr = localStorage.getItem(TASKS_KEY);
+    if (!allTasksStr) return;
+    
+    let allTasks: Task[] = JSON.parse(allTasksStr);
+    allTasks = allTasks.filter(t => t.id !== taskId);
+    localStorage.setItem(TASKS_KEY, JSON.stringify(allTasks));
   },
 
   // --- FEEDBACK ---

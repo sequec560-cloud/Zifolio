@@ -27,11 +27,12 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
   // New Asset Form State
   const initialFormState = {
     name: '',
+    typology: '', // Added typology
     type: AssetType.OT,
     investedAmount: 0,
     interestRate: 0,
     quantity: 1,
-    currentPriceUnit: 0, // Added manual price input
+    currentPriceUnit: 0, 
     purchaseDate: new Date().toISOString().split('T')[0]
   };
 
@@ -55,11 +56,12 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
     setEditingId(asset.id);
     setFormData({
       name: asset.name,
+      typology: asset.typology || '', // Load typology
       type: asset.type,
       investedAmount: asset.investedAmount,
       quantity: asset.quantity,
       interestRate: asset.interestRate,
-      currentPriceUnit: asset.currentPriceUnit, // Populate existing price
+      currentPriceUnit: asset.currentPriceUnit,
       purchaseDate: asset.purchaseDate,
     });
     setIsModalOpen(true);
@@ -84,6 +86,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
         id: editingId,
         userId: user.id,
         name: formData.name!,
+        typology: formData.typology || 'UP', // Default to UP if empty
         type: formData.type as AssetType,
         investedAmount: Number(formData.investedAmount),
         quantity: Number(formData.quantity),
@@ -103,6 +106,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
         id: Math.random().toString(36).substr(2, 9),
         userId: user.id,
         name: formData.name!,
+        typology: formData.typology || 'UP', // Default to UP if empty
         type: formData.type as AssetType,
         investedAmount: Number(formData.investedAmount),
         quantity: Number(formData.quantity),
@@ -119,7 +123,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-3xl font-bold text-white">Meus Ativos</h2>
         <button 
@@ -136,7 +140,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
         <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
         <input 
           type="text" 
-          placeholder="Pesquisar por nome, tipo..." 
+          placeholder="Pesquisar por código, tipologia..." 
           className="w-full bg-zblack-900 border border-zblack-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-zgold-500"
         />
       </div>
@@ -147,8 +151,8 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
           <table className="w-full text-left">
             <thead className="bg-zblack-950 border-b border-zblack-800">
               <tr>
-                <th className="p-4 text-sm font-medium text-gray-400">Título</th>
-                <th className="p-4 text-sm font-medium text-gray-400">Tipo</th>
+                <th className="p-4 text-sm font-medium text-gray-400">Cód. Negociação</th>
+                <th className="p-4 text-sm font-medium text-gray-400">Tipologia</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Data Compra</th>
                 <th className="p-4 text-sm font-medium text-gray-400 text-right">Investido</th>
                 <th className="p-4 text-sm font-medium text-gray-400 text-right">Valor Atual</th>
@@ -165,14 +169,14 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                 return (
                   <tr key={asset.id} className="hover:bg-zblack-800/50 transition-colors group">
                     <td className="p-4">
-                      <p className="font-bold text-white">{asset.name}</p>
+                      <p className="font-bold text-white font-mono">{asset.name}</p>
                       <p className={`text-xs ${profitPercent >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                         {profitPercent > 0 ? '+' : ''}{profitPercent.toFixed(1)}%
                       </p>
                     </td>
                     <td className="p-4">
-                      <span className="bg-zblack-950 border border-zblack-800 px-3 py-1 rounded-lg text-xs text-gray-300">
-                        {asset.type}
+                      <span className="bg-zblack-950 border border-zblack-800 px-3 py-1 rounded-lg text-xs text-gray-300 font-medium">
+                        {asset.typology || asset.type}
                       </span>
                     </td>
                     <td className="p-4 text-gray-300 text-sm">{asset.purchaseDate}</td>
@@ -232,20 +236,31 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
             
             <form onSubmit={handleSaveAsset} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Nome do Título</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Cód. Negociação (Título)</label>
                 <input 
                   type="text" 
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
-                  placeholder="Ex: OT-NR-2025"
+                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  placeholder="Ex: UP-PP 41313, BCGA..."
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                   <label className="block text-xs font-medium text-gray-400 mb-1">Tipo</label>
+                   <label className="block text-xs font-medium text-gray-400 mb-1">Tipologia</label>
+                   <input 
+                     type="text"
+                     value={formData.typology}
+                     onChange={e => setFormData({...formData, typology: e.target.value})}
+                     className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                     placeholder="Ex: UP, Ações, FIS"
+                     required
+                   />
+                </div>
+                <div>
+                   <label className="block text-xs font-medium text-gray-400 mb-1">Categoria (Interna)</label>
                    <select 
                      value={formData.type}
                      onChange={e => setFormData({...formData, type: e.target.value as AssetType})}
@@ -254,7 +269,10 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                      {Object.values(AssetType).map(t => <option key={t} value={t}>{t}</option>)}
                    </select>
                 </div>
-                <div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                 <div>
                    <label className="block text-xs font-medium text-gray-400 mb-1">Data de Compra</label>
                    <input 
                       type="date"
@@ -264,9 +282,6 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                       required
                    />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                    <label className="block text-xs font-medium text-gray-400 mb-1">Valor Total Investido (Kz)</label>
                    <input 
@@ -278,6 +293,9 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                       required
                    />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                  <div>
                    <label className="block text-xs font-medium text-gray-400 mb-1">Preço Atual (Unitário)</label>
                    <input 
@@ -289,9 +307,6 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                       required
                    />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                    <label className="block text-xs font-medium text-gray-400 mb-1">Quantidade</label>
                    <input 
@@ -303,7 +318,9 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                       required
                    />
                 </div>
-                <div>
+              </div>
+
+              <div>
                    <label className="block text-xs font-medium text-gray-400 mb-1">Taxa de Juro (%)</label>
                    <input 
                       type="number"
@@ -314,7 +331,6 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                       min="0"
                       required
                    />
-                </div>
               </div>
 
               <div className="pt-4">

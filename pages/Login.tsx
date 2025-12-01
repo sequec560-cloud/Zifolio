@@ -41,6 +41,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    try {
+      // Simulate Google Auth with a mock user for the demo
+      const mockGoogleUser = {
+        name: 'Utilizador Google',
+        email: 'demo.google@gmail.com',
+        photoUrl: 'https://ui-avatars.com/api/?name=Google+User&background=random'
+      };
+      
+      const user = db.loginWithGoogle(mockGoogleUser.email, mockGoogleUser.name, mockGoogleUser.photoUrl);
+      onLogin(user);
+    } catch (err: any) {
+      setError('Falha ao iniciar sessão com Google.');
+    }
+  };
+
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -227,7 +243,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 type="submit"
                 className="w-full bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-zgold-500/20 transform active:scale-95 mt-2"
               >
-                <span>Criar Conta Gratuita</span>
+                <span>Criar Conta Grátis</span>
                 <UserPlus size={18} />
               </button>
             </form>
@@ -337,11 +353,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </div>
               </div>
 
-              <button disabled className="mt-6 w-full bg-white text-black font-medium py-3 rounded-xl flex items-center justify-center space-x-2 opacity-50 cursor-not-allowed">
+              <button 
+                type="button"
+                onClick={handleGoogleLogin}
+                className="mt-6 w-full bg-white text-black font-medium py-3 rounded-xl flex items-center justify-center space-x-2 hover:bg-gray-100 transition-colors shadow-lg transform active:scale-95 duration-200"
+              >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
                 </svg>
-                <span>Google (Em breve)</span>
+                <span>Continuar com Google</span>
               </button>
             </div>
           )}
@@ -351,7 +371,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="text-center mt-6">
            {authMode === 'login' && (
              <button onClick={() => switchMode('register')} className="text-gray-500 text-sm hover:text-white transition-colors">
-               Não tem conta? <span className="text-zgold-500 font-medium">Registar agora</span>
+               Não tem conta? <span className="text-zgold-500 font-medium">Criar conta grátis</span>
              </button>
            )}
            {authMode === 'register' && (
@@ -365,6 +385,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
              </button>
            )}
         </div>
+      </div>
+
+      {/* Copyright Footer */}
+      <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
+         <p className="text-xs text-gray-600">
+           © {new Date().getFullYear()} ZiFÓLIO. Todos os direitos reservados.
+         </p>
       </div>
     </div>
   );
