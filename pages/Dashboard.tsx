@@ -15,7 +15,9 @@ import {
   Plus,
   Trash2,
   CheckSquare,
-  Square
+  Square,
+  Lock,
+  Crown
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -36,9 +38,10 @@ import { db } from '../services/db';
 
 interface DashboardProps {
   user: User;
+  onOpenPremium: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, onOpenPremium }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -195,6 +198,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   // Ticker Data (Tripled for smooth infinite scroll)
   const tickerItems = [...MARKET_INDICATORS, ...MARKET_INDICATORS, ...MARKET_INDICATORS];
+
+  const isPremium = user.plan === 'Premium';
 
   if (loading) {
       return <div className="p-10 text-center text-gray-500 animate-pulse">Carregando dados da carteira...</div>;
@@ -367,13 +372,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                </div>
                <div>
                   <p className="text-gray-400 text-xs">Retorno YTD</p>
-                  <p className="text-xl font-bold text-white mt-0.5">+{ytdReturn}%</p>
+                  <div className={`mt-0.5 ${!isPremium ? 'blur-sm select-none' : ''}`}>
+                    <p className="text-xl font-bold text-white">+{ytdReturn}%</p>
+                  </div>
                </div>
             </div>
             <span className="text-[10px] text-gray-500 bg-zblack-950 px-2 py-1 rounded-full z-20">Desde Jan</span>
           </div>
           
-          <div className="absolute bottom-0 right-0 left-0 h-14 px-4 pb-2 opacity-50">
+          {!isPremium && (
+             <div className="absolute inset-0 flex items-center justify-center z-20" onClick={onOpenPremium}>
+                <div className="bg-zblack-950/80 p-2 rounded-full cursor-pointer hover:bg-zgold-500 hover:text-black transition-colors">
+                  <Lock size={16} className="text-gray-400" />
+                </div>
+             </div>
+          )}
+          
+          <div className={`absolute bottom-0 right-0 left-0 h-14 px-4 pb-2 opacity-50 ${!isPremium ? 'opacity-20 blur-sm' : ''}`}>
              <ResponsiveContainer width="100%" height="100%">
                <BarChart data={ytdChartData}>
                  <Bar dataKey="val" fill="#c084fc" radius={[2, 2, 0, 0]} barSize={6} />
@@ -383,31 +398,53 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         </div>
 
         {/* Avg Annual Return */}
-        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors h-[130px]">
+        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors h-[130px] relative">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-zblack-950 rounded-xl text-zgold-500">
               <Percent size={20} />
             </div>
             <div>
               <p className="text-gray-400 text-xs">Média Anual</p>
-              <p className="text-xl font-bold text-white mt-0.5">{weightedInterestRate.toFixed(2)}%</p>
+              <div className={`${!isPremium ? 'blur-sm select-none' : ''}`}>
+                 <p className="text-xl font-bold text-white mt-0.5">{weightedInterestRate.toFixed(2)}%</p>
+              </div>
             </div>
           </div>
           <span className="text-xs text-gray-500">Ponderada</span>
+
+          {!isPremium && (
+             <div className="absolute inset-0 flex items-center justify-center z-20 bg-transparent" onClick={onOpenPremium}>
+                <div className="bg-zblack-950/80 p-2 rounded-full cursor-pointer hover:bg-zgold-500 hover:text-black transition-colors">
+                  <Lock size={16} className="text-gray-400" />
+                </div>
+             </div>
+          )}
         </div>
 
         {/* Risk Score */}
-        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors h-[130px]">
+        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors h-[130px] relative">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-zblack-950 rounded-xl text-red-400">
               <ShieldAlert size={20} />
             </div>
             <div>
               <p className="text-gray-400 text-xs">Risco da Carteira</p>
-              <p className={`text-xl font-bold mt-0.5 ${riskColor}`}>{riskLabel}</p>
+              <div className={`${!isPremium ? 'blur-sm select-none' : ''}`}>
+                 <p className={`text-xl font-bold mt-0.5 ${riskColor}`}>{riskLabel}</p>
+              </div>
             </div>
           </div>
-          <span className="text-xs font-mono bg-zblack-950 px-2 py-1 rounded text-gray-400">{riskScore.toFixed(1)}/5.0</span>
+          <div className={`${!isPremium ? 'blur-sm select-none' : ''}`}>
+             <span className="text-xs font-mono bg-zblack-950 px-2 py-1 rounded text-gray-400">{riskScore.toFixed(1)}/5.0</span>
+          </div>
+
+          {!isPremium && (
+             <div className="absolute inset-0 flex items-center justify-center z-20 bg-transparent" onClick={onOpenPremium}>
+                <div className="bg-zblack-950/80 p-2 rounded-full cursor-pointer hover:bg-zgold-500 hover:text-black transition-colors">
+                  <Lock size={16} className="text-gray-400" />
+                </div>
+             </div>
+          )}
         </div>
       </div>
 
@@ -431,9 +468,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   </linearGradient>
                 </defs>
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#141414', borderColor: '#333', borderRadius: '12px' }}
+                  contentStyle={{ backgroundColor: '#141414', borderColor: '#333', borderRadius: '12px', color: '#fff' }}
                   itemStyle={{ color: '#f09805' }}
-                  formatter={(value: number) => formatKz(value)}
+                  labelStyle={{ color: '#999' }}
+                  formatter={(value: number) => [formatKz(value), "Patrimônio"]}
                 />
                 <XAxis dataKey="month" stroke="#333" />
                 <YAxis hide />
@@ -459,7 +497,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                      <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
                    ))}
                  </Pie>
-                 <Tooltip />
+                 <Tooltip 
+                    contentStyle={{ backgroundColor: '#141414', borderColor: '#333', borderRadius: '12px', color: '#fff' }}
+                    itemStyle={{ color: '#f09805' }}
+                    formatter={(value: number) => [value + '%', "Valor"]}
+                 />
                </PieChart>
              </ResponsiveContainer>
              {/* Center Text */}
@@ -580,14 +622,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
       {/* Bar Chart Breakdown */}
       {assets.length > 0 && (
-        <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl relative overflow-hidden">
+          <div className="flex justify-between items-center mb-6 relative z-10">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <BarChart2 size={20} className="text-zgold-500" />
               Composição Detalhada
             </h3>
+            {!isPremium && <Crown size={18} className="text-zgold-500 animate-pulse" />}
           </div>
-          <div className="h-[250px] w-full">
+          
+          <div className={`h-[250px] w-full transition-all duration-300 ${!isPremium ? 'blur-sm opacity-30 select-none' : ''}`}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={assetTypeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <Tooltip 
@@ -614,7 +658,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+          
+          <div className={`mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 ${!isPremium ? 'blur-sm opacity-30 select-none' : ''}`}>
             {assetTypeData.map((item, index) => (
                <div key={index} className="bg-zblack-950 rounded-lg p-3 text-center border border-zblack-800">
                   <p className="text-xs text-gray-500 mb-1">{item.fullName}</p>
@@ -622,6 +667,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                </div>
             ))}
           </div>
+
+          {!isPremium && (
+             <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-gradient-to-t from-zblack-900/80 to-transparent">
+                <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-2xl text-center shadow-2xl max-w-xs">
+                   <Crown size={32} className="text-zgold-500 mx-auto mb-3" />
+                   <h4 className="font-bold text-white mb-1">Visualização Premium</h4>
+                   <p className="text-sm text-gray-400 mb-4">Atualize para ver a análise detalhada da sua carteira.</p>
+                   <button 
+                     onClick={onOpenPremium}
+                     className="bg-zgold-500 text-black font-bold py-2 px-6 rounded-lg text-sm hover:bg-zgold-400 transition-colors"
+                   >
+                     Desbloquear Agora
+                   </button>
+                </div>
+             </div>
+          )}
         </div>
       )}
 

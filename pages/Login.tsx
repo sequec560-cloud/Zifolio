@@ -243,7 +243,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 type="submit"
                 className="w-full bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-zgold-500/20 transform active:scale-95 mt-2"
               >
-                <span>Criar Conta Grátis</span>
+                <span>Criar conta grátis</span>
                 <UserPlus size={18} />
               </button>
             </form>

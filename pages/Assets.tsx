@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Trash2, Edit2, MoreVertical, AlertTriangle } from 'lucide-react';
-import { formatKz } from '../constants';
+import { Plus, Search, Trash2, Edit2, MoreVertical, AlertTriangle, Lock, History, Wallet, ArrowDownRight, ArrowUpRight, Percent } from 'lucide-react';
+import { formatKz, MOCK_TRANSACTIONS } from '../constants';
 import { Asset, AssetType, User } from '../types';
 import { db } from '../services/db';
 
 interface AssetsProps {
   user: User;
+  onOpenPremium: () => void;
 }
 
-const Assets: React.FC<AssetsProps> = ({ user }) => {
+const Assets: React.FC<AssetsProps> = ({ user, onOpenPremium }) => {
+  const [activeTab, setActiveTab] = useState<'portfolio' | 'history'>('portfolio');
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -17,6 +19,8 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<string | null>(null);
   
+  const isPremium = user.plan === 'Premium';
+
   // Load assets on mount
   useEffect(() => {
     if (user) {
@@ -27,7 +31,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
   // New Asset Form State
   const initialFormState = {
     name: '',
-    typology: '', // Added typology
+    typology: '', 
     type: AssetType.OT,
     investedAmount: 0,
     interestRate: 0,
@@ -56,7 +60,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
     setEditingId(asset.id);
     setFormData({
       name: asset.name,
-      typology: asset.typology || '', // Load typology
+      typology: asset.typology || '',
       type: asset.type,
       investedAmount: asset.investedAmount,
       quantity: asset.quantity,
@@ -73,6 +77,14 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
     setFormData(initialFormState);
   };
 
+  const handleAddClick = () => {
+    if (!isPremium && assets.length >= 3) {
+      onOpenPremium();
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
   const handleSaveAsset = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.investedAmount || !user) return;
@@ -86,7 +98,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
         id: editingId,
         userId: user.id,
         name: formData.name!,
-        typology: formData.typology || 'UP', // Default to UP if empty
+        typology: formData.typology || 'UP',
         type: formData.type as AssetType,
         investedAmount: Number(formData.investedAmount),
         quantity: Number(formData.quantity),
@@ -102,11 +114,17 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
       ));
     } else {
       // Create new asset
+      if (!isPremium && assets.length >= 3) {
+        onOpenPremium();
+        closeModal();
+        return;
+      }
+
       const assetToAdd: Asset = {
         id: Math.random().toString(36).substr(2, 9),
         userId: user.id,
         name: formData.name!,
-        typology: formData.typology || 'UP', // Default to UP if empty
+        typology: formData.typology || 'UP',
         type: formData.type as AssetType,
         investedAmount: Number(formData.investedAmount),
         quantity: Number(formData.quantity),
@@ -122,104 +140,208 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
     closeModal();
   };
 
+  // Helper to get transaction style
+  const getTransactionStyle = (type: string) => {
+    switch (type) {
+      case 'buy': return { icon: ArrowDownRight, color: 'text-red-500', bg: 'bg-red-500/10', label: 'Compra' };
+      case 'sell': return { icon: ArrowUpRight, color: 'text-green-500', bg: 'bg-green-500/10', label: 'Venda' };
+      case 'interest': return { icon: Percent, color: 'text-zgold-500', bg: 'bg-zgold-500/10', label: 'Juros / Cupão' };
+      default: return { icon: Wallet, color: 'text-gray-500', bg: 'bg-gray-500/10', label: 'Outro' };
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 className="text-3xl font-bold text-white">Meus Ativos</h2>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-zgold-500 hover:bg-zgold-400 text-black px-4 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2"
-        >
-          <Plus size={20} />
-          Adicionar Ativo
-        </button>
-      </div>
-
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
-        <input 
-          type="text" 
-          placeholder="Pesquisar por código, tipologia..." 
-          className="w-full bg-zblack-900 border border-zblack-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-zgold-500"
-        />
-      </div>
-
-      {/* Assets Grid/List */}
-      <div className="bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-zblack-950 border-b border-zblack-800">
-              <tr>
-                <th className="p-4 text-sm font-medium text-gray-400">Cód. Negociação</th>
-                <th className="p-4 text-sm font-medium text-gray-400">Tipologia</th>
-                <th className="p-4 text-sm font-medium text-gray-400">Data Compra</th>
-                <th className="p-4 text-sm font-medium text-gray-400 text-right">Investido</th>
-                <th className="p-4 text-sm font-medium text-gray-400 text-right">Valor Atual</th>
-                <th className="p-4 text-sm font-medium text-gray-400 text-center">Taxa (%)</th>
-                <th className="p-4 text-sm font-medium text-gray-400"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zblack-800">
-              {assets.map((asset) => {
-                const currentValue = asset.quantity * asset.currentPriceUnit;
-                const profit = currentValue - asset.investedAmount;
-                const profitPercent = asset.investedAmount > 0 ? (profit / asset.investedAmount) * 100 : 0;
-
-                return (
-                  <tr key={asset.id} className="hover:bg-zblack-800/50 transition-colors group">
-                    <td className="p-4">
-                      <p className="font-bold text-white font-mono">{asset.name}</p>
-                      <p className={`text-xs ${profitPercent >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {profitPercent > 0 ? '+' : ''}{profitPercent.toFixed(1)}%
-                      </p>
-                    </td>
-                    <td className="p-4">
-                      <span className="bg-zblack-950 border border-zblack-800 px-3 py-1 rounded-lg text-xs text-gray-300 font-medium">
-                        {asset.typology || asset.type}
-                      </span>
-                    </td>
-                    <td className="p-4 text-gray-300 text-sm">{asset.purchaseDate}</td>
-                    <td className="p-4 text-right font-mono text-gray-300">
-                      {formatKz(asset.investedAmount)}
-                    </td>
-                    <td className="p-4 text-right font-mono text-white font-medium">
-                      {formatKz(currentValue)}
-                    </td>
-                    <td className="p-4 text-center text-sm text-zgold-500">
-                      {asset.interestRate > 0 ? `${asset.interestRate}%` : '-'}
-                    </td>
-                    <td className="p-4 text-right">
-                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button 
-                            onClick={() => handleEdit(asset)}
-                            className="p-2 bg-zblack-950 rounded-lg text-gray-400 hover:text-white hover:bg-zblack-800 transition-colors"
-                            title="Editar"
-                          >
-                           <Edit2 size={16} />
-                         </button>
-                         <button 
-                           onClick={() => initiateDelete(asset.id)}
-                           className="p-2 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-                           title="Remover"
-                         >
-                           <Trash2 size={16} />
-                         </button>
-                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        
-        {assets.length === 0 && (
-           <div className="p-10 text-center text-gray-500">
-             Nenhum ativo encontrado. Adicione o seu primeiro investimento BODIVA.
+        <div>
+           <h2 className="text-3xl font-bold text-white mb-2">Meus Ativos</h2>
+           <div className="flex gap-2 bg-zblack-900 p-1 rounded-xl border border-zblack-800">
+             <button
+               onClick={() => setActiveTab('portfolio')}
+               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+                 activeTab === 'portfolio' 
+                 ? 'bg-zblack-800 text-white shadow-lg' 
+                 : 'text-gray-400 hover:text-white'
+               }`}
+             >
+               <Wallet size={16} />
+               Carteira
+             </button>
+             <button
+               onClick={() => setActiveTab('history')}
+               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+                 activeTab === 'history' 
+                 ? 'bg-zblack-800 text-white shadow-lg' 
+                 : 'text-gray-400 hover:text-white'
+               }`}
+             >
+               <History size={16} />
+               Histórico
+             </button>
            </div>
+        </div>
+
+        {activeTab === 'portfolio' && (
+          <div className="flex items-center gap-4">
+             {!isPremium && (
+               <span className="text-xs text-gray-500 border border-zblack-800 px-3 py-1 rounded-full">
+                 Plano Free: {assets.length}/3 ativos
+               </span>
+             )}
+            <button 
+              onClick={handleAddClick}
+              className={`bg-zgold-500 hover:bg-zgold-400 text-black px-4 py-2 rounded-xl font-semibold transition-colors flex items-center gap-2 ${(!isPremium && assets.length >= 3) ? 'opacity-90' : ''}`}
+            >
+              {(!isPremium && assets.length >= 3) ? <Lock size={18} /> : <Plus size={20} />}
+              Adicionar Ativo
+            </button>
+          </div>
         )}
       </div>
+
+      {activeTab === 'portfolio' ? (
+        <>
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
+            <input 
+              type="text" 
+              placeholder="Pesquisar por código, tipologia..." 
+              className="w-full bg-zblack-900 border border-zblack-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-zgold-500"
+            />
+          </div>
+
+          {/* Assets Grid/List */}
+          <div className="bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-zblack-950 border-b border-zblack-800">
+                  <tr>
+                    <th className="p-4 text-sm font-medium text-gray-400">Cód. Negociação</th>
+                    <th className="p-4 text-sm font-medium text-gray-400">Tipologia</th>
+                    <th className="p-4 text-sm font-medium text-gray-400">Data Compra</th>
+                    <th className="p-4 text-sm font-medium text-gray-400 text-right">Investido</th>
+                    <th className="p-4 text-sm font-medium text-gray-400 text-right">Valor Atual</th>
+                    <th className="p-4 text-sm font-medium text-gray-400 text-center">Taxa (%)</th>
+                    <th className="p-4 text-sm font-medium text-gray-400"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zblack-800">
+                  {assets.map((asset) => {
+                    const currentValue = asset.quantity * asset.currentPriceUnit;
+                    const profit = currentValue - asset.investedAmount;
+                    const profitPercent = asset.investedAmount > 0 ? (profit / asset.investedAmount) * 100 : 0;
+
+                    return (
+                      <tr key={asset.id} className="hover:bg-zblack-800/50 transition-colors group">
+                        <td className="p-4">
+                          <p className="font-bold text-white font-mono">{asset.name}</p>
+                          <p className={`text-xs ${profitPercent >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            {profitPercent > 0 ? '+' : ''}{profitPercent.toFixed(1)}%
+                          </p>
+                        </td>
+                        <td className="p-4">
+                          <span className="bg-zblack-950 border border-zblack-800 px-3 py-1 rounded-lg text-xs text-gray-300 font-medium">
+                            {asset.typology || asset.type}
+                          </span>
+                        </td>
+                        <td className="p-4 text-gray-300 text-sm">{asset.purchaseDate}</td>
+                        <td className="p-4 text-right font-mono text-gray-300">
+                          {formatKz(asset.investedAmount)}
+                        </td>
+                        <td className="p-4 text-right font-mono text-white font-medium">
+                          {formatKz(currentValue)}
+                        </td>
+                        <td className="p-4 text-center text-sm text-zgold-500">
+                          {asset.interestRate > 0 ? `${asset.interestRate}%` : '-'}
+                        </td>
+                        <td className="p-4 text-right">
+                           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button 
+                                onClick={() => handleEdit(asset)}
+                                className="p-2 bg-zblack-950 rounded-lg text-gray-400 hover:text-white hover:bg-zblack-800 transition-colors"
+                                title="Editar"
+                              >
+                               <Edit2 size={16} />
+                             </button>
+                             <button 
+                               onClick={() => initiateDelete(asset.id)}
+                               className="p-2 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                               title="Remover"
+                             >
+                               <Trash2 size={16} />
+                             </button>
+                           </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            {assets.length === 0 && (
+               <div className="p-10 text-center text-gray-500">
+                 Nenhum ativo encontrado. Adicione o seu primeiro investimento BODIVA.
+               </div>
+            )}
+          </div>
+        </>
+      ) : (
+        /* History View */
+        <div className="bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden animate-in fade-in duration-300">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-zblack-950 border-b border-zblack-800">
+                <tr>
+                  <th className="p-4 text-sm font-medium text-gray-400">Data</th>
+                  <th className="p-4 text-sm font-medium text-gray-400">Operação</th>
+                  <th className="p-4 text-sm font-medium text-gray-400">Ativo</th>
+                  <th className="p-4 text-sm font-medium text-gray-400 text-right">Valor</th>
+                  <th className="p-4 text-sm font-medium text-gray-400"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zblack-800">
+                {MOCK_TRANSACTIONS.length > 0 ? (
+                  MOCK_TRANSACTIONS.map((tx) => {
+                    const style = getTransactionStyle(tx.type);
+                    const Icon = style.icon;
+
+                    return (
+                      <tr key={tx.id} className="hover:bg-zblack-800/50 transition-colors">
+                        <td className="p-4 text-sm text-gray-300">{tx.date}</td>
+                        <td className="p-4">
+                           <div className="flex items-center gap-2">
+                             <div className={`p-1.5 rounded-lg ${style.bg} ${style.color}`}>
+                               <Icon size={14} />
+                             </div>
+                             <span className="text-sm text-white font-medium">{style.label}</span>
+                           </div>
+                        </td>
+                        <td className="p-4 text-sm text-gray-400">{tx.assetName}</td>
+                        <td className={`p-4 text-right font-mono font-bold ${style.color}`}>
+                          {tx.type === 'buy' ? '-' : '+'}{formatKz(tx.amount)}
+                        </td>
+                        <td className="p-4 text-right">
+                          <button className="text-gray-500 hover:text-white transition-colors">
+                            <MoreVertical size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-gray-500">
+                      Nenhum histórico de transações disponível.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Asset Modal Overlay */}
       {isModalOpen && (

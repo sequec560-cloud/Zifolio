@@ -6,12 +6,22 @@ const FEEDBACK_KEY = 'zifolio_feedback_db';
 const ASSETS_KEY = 'zifolio_assets_db';
 const TASKS_KEY = 'zifolio_tasks_db';
 
+// Helper to safely parse JSON
+const safeJsonParse = <T>(key: string, fallback: T): T => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch (error) {
+    console.error(`Error parsing ${key} from localStorage:`, error);
+    return fallback;
+  }
+};
+
 export const db = {
   // --- USERS ---
 
   getUsers: (): User[] => {
-    const usersStr = localStorage.getItem(USERS_KEY);
-    return usersStr ? JSON.parse(usersStr) : [];
+    return safeJsonParse<User[]>(USERS_KEY, []);
   },
 
   createUser: (user: Omit<User, 'id' | 'createdAt'>): User => {
@@ -144,8 +154,7 @@ export const db = {
   // --- ASSETS ---
 
   getAllAssets: (): Asset[] => {
-    const str = localStorage.getItem(ASSETS_KEY);
-    return str ? JSON.parse(str) : [];
+    return safeJsonParse<Asset[]>(ASSETS_KEY, []);
   },
 
   getUserAssets: (userId: string): Asset[] => {
@@ -187,14 +196,12 @@ export const db = {
   // --- TASKS ---
 
   getUserTasks: (userId: string): Task[] => {
-    const allTasksStr = localStorage.getItem(TASKS_KEY);
-    const allTasks: Task[] = allTasksStr ? JSON.parse(allTasksStr) : [];
+    const allTasks = safeJsonParse<Task[]>(TASKS_KEY, []);
     return allTasks.filter(t => t.userId === userId);
   },
 
   addTask: (task: Omit<Task, 'id' | 'createdAt'>): Task => {
-    const allTasksStr = localStorage.getItem(TASKS_KEY);
-    const allTasks: Task[] = allTasksStr ? JSON.parse(allTasksStr) : [];
+    const allTasks = safeJsonParse<Task[]>(TASKS_KEY, []);
     
     const newTask: Task = {
       ...task,
@@ -208,10 +215,7 @@ export const db = {
   },
 
   toggleTask: (taskId: string): Task[] => {
-    const allTasksStr = localStorage.getItem(TASKS_KEY);
-    if (!allTasksStr) return [];
-    
-    const allTasks: Task[] = JSON.parse(allTasksStr);
+    const allTasks = safeJsonParse<Task[]>(TASKS_KEY, []);
     const index = allTasks.findIndex(t => t.id === taskId);
     
     if (index !== -1) {
@@ -222,10 +226,7 @@ export const db = {
   },
 
   deleteTask: (taskId: string): void => {
-    const allTasksStr = localStorage.getItem(TASKS_KEY);
-    if (!allTasksStr) return;
-    
-    let allTasks: Task[] = JSON.parse(allTasksStr);
+    let allTasks = safeJsonParse<Task[]>(TASKS_KEY, []);
     allTasks = allTasks.filter(t => t.id !== taskId);
     localStorage.setItem(TASKS_KEY, JSON.stringify(allTasks));
   },
@@ -233,7 +234,7 @@ export const db = {
   // --- FEEDBACK ---
 
   saveFeedback: (feedback: Omit<Feedback, 'id' | 'createdAt'>): void => {
-    const existingFeedback = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '[]');
+    const existingFeedback = safeJsonParse<Feedback[]>(FEEDBACK_KEY, []);
     const newFeedback: Feedback = {
       ...feedback,
       id: Math.random().toString(36).substr(2, 9),

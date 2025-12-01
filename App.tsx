@@ -81,7 +81,7 @@ const App: React.FC = () => {
         setTimeout(() => {
           setIsPremiumModalOpen(false);
           setUpgradeSuccess(false);
-        }, 2000);
+        }, 2500);
       } catch (error) {
         console.error("Upgrade failed", error);
         setIsProcessingUpgrade(false);
@@ -215,8 +215,18 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 h-screen">
         <div className="max-w-5xl mx-auto pb-20 md:pb-0">
-          {currentView === 'dashboard' && <Dashboard user={currentUser} />}
-          {currentView === 'assets' && <Assets user={currentUser} />}
+          {currentView === 'dashboard' && (
+            <Dashboard 
+              user={currentUser} 
+              onOpenPremium={() => setIsPremiumModalOpen(true)}
+            />
+          )}
+          {currentView === 'assets' && (
+            <Assets 
+              user={currentUser} 
+              onOpenPremium={() => setIsPremiumModalOpen(true)}
+            />
+          )}
           {currentView === 'simulator' && (
             <Simulator 
               user={currentUser} 
@@ -353,13 +363,13 @@ const App: React.FC = () => {
                 </div>
 
                 {upgradeSuccess ? (
-                  <div className="py-12 text-center animate-in zoom-in duration-500">
-                     <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                       <Check size={40} />
-                     </div>
-                     <h3 className="text-2xl font-bold text-white mb-2">Bem-vindo ao Premium!</h3>
-                     <p className="text-gray-400">A sua conta foi atualizada com sucesso.</p>
-                  </div>
+                   <div className="py-12 text-center animate-in zoom-in duration-500 flex flex-col items-center justify-center">
+                    <div className="w-24 h-24 bg-gradient-to-br from-zgold-400 to-zgold-600 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-zgold-500/30">
+                      <Crown size={48} className="text-black" />
+                    </div>
+                    <h3 className="text-3xl font-bold text-white mb-2">Bem-vindo ao Premium!</h3>
+                    <p className="text-gray-400 max-w-xs mx-auto">Agora você tem acesso ilimitado a todos os recursos do ZiFÓLIO.</p>
+                 </div>
                 ) : (
                   <>
                     <div className="space-y-4 mb-8">

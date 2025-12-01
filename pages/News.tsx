@@ -129,14 +129,22 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
           
           {/* Search Bar */}
           <div className="relative w-full lg:w-96 flex-shrink-0">
-            <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Pesquisar notícias..." 
-              className="w-full bg-zblack-900 border border-zblack-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+              className="w-full bg-zblack-900 border border-zblack-800 rounded-2xl py-3 pl-12 pr-10 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
             />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-1 rounded-full hover:bg-zblack-800 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           {/* Date Range Filter */}
@@ -194,7 +202,7 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
       {featuredArticle && (
         <div 
           onClick={() => onArticleClick(featuredArticle)}
-          className="relative h-[400px] w-full bg-zblack-900 rounded-3xl overflow-hidden cursor-pointer group border border-zblack-800 hover:scale-[1.01] hover:shadow-2xl hover:shadow-zgold-500/10 transition-all duration-500"
+          className="relative h-[400px] w-full bg-zblack-900 rounded-3xl overflow-hidden cursor-pointer group border border-zblack-800 hover:-translate-y-1 hover:shadow-2xl hover:shadow-zgold-500/20 transition-all duration-500 ease-out"
         >
           <img 
             src={featuredArticle.imageUrl} 
@@ -232,13 +240,13 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
             <div 
               key={news.id}
               onClick={() => onArticleClick(news)}
-              className="group bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden hover:border-zgold-500/30 hover:scale-[1.02] hover:shadow-xl hover:shadow-zgold-500/10 transition-all duration-300 flex flex-col cursor-pointer h-full"
+              className="group bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden hover:border-zgold-500/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-zgold-500/10 transition-all duration-400 ease-out flex flex-col cursor-pointer h-full"
             >
               <div className="relative h-48 overflow-hidden">
                 <img 
                   src={news.imageUrl} 
                   alt={news.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-4 left-4">
                   <span className="bg-black/60 backdrop-blur-md text-white text-xs font-medium px-3 py-1 rounded-full border border-white/10">

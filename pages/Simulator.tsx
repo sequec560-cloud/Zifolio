@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatKz } from '../constants';
-import { Info, Crown, Calendar, ArrowRight, Target, Clock, TrendingUp } from 'lucide-react';
+import { Info, Crown, Calendar, ArrowRight, Target, Clock, TrendingUp, Lock } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { User } from '../types';
 
@@ -29,11 +29,13 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
   const [finalValue, setFinalValue] = useState(0);
   const [timeResult, setTimeResult] = useState<{years: number, months: number} | null>(null);
 
+  const isPremium = user.plan === 'Premium';
+
   // Constants for dropdowns
   const frequencies = [
     { label: 'Mensal', value: 12 },
-    { label: 'Trimestral', value: 4 },
-    { label: 'Anual', value: 1 },
+    { label: 'Trimestral', value: 4, premium: true },
+    { label: 'Anual', value: 1, premium: true },
   ];
 
   useEffect(() => {
@@ -123,7 +125,22 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
     setProjection(data);
   };
 
-  const isPremium = user.plan === 'Premium';
+  const handleModeChange = (newMode: CalculationMode) => {
+    if (newMode === 'goal' && !isPremium) {
+        onOpenPremium();
+        return;
+    }
+    setMode(newMode);
+  };
+
+  const handleFrequencyChange = (freq: number, isPremiumFreq: boolean) => {
+      if (isPremiumFreq && !isPremium) {
+          onOpenPremium();
+          return;
+      }
+      setFrequency(freq as CompoundingFrequency);
+  };
+
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -136,7 +153,7 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
         {/* Mode Toggle */}
         <div className="bg-zblack-900 border border-zblack-800 p-1 rounded-xl flex">
             <button
-                onClick={() => setMode('growth')}
+                onClick={() => handleModeChange('growth')}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                     mode === 'growth' 
                     ? 'bg-zgold-500 text-black shadow-lg' 
@@ -146,13 +163,14 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                 Simular Rendimento
             </button>
             <button
-                onClick={() => setMode('goal')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                onClick={() => handleModeChange('goal')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
                     mode === 'goal' 
                     ? 'bg-zgold-500 text-black shadow-lg' 
                     : 'text-gray-400 hover:text-white'
                 }`}
             >
+                {!isPremium && <Lock size={12} />}
                 Simular Meta
             </button>
         </div>
@@ -213,14 +231,17 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                     {frequencies.map((freq) => (
                         <button
                             key={freq.value}
-                            onClick={() => setFrequency(freq.value as CompoundingFrequency)}
-                            className={`py-2 px-1 rounded-lg text-xs font-medium border transition-colors ${
+                            onClick={() => handleFrequencyChange(freq.value, !!freq.premium)}
+                            className={`py-2 px-1 rounded-lg text-xs font-medium border transition-colors relative ${
                                 frequency === freq.value
                                 ? 'bg-zgold-500/20 text-zgold-500 border-zgold-500'
                                 : 'bg-zblack-950 text-gray-400 border-zblack-800 hover:border-gray-600'
                             }`}
                         >
-                            {freq.label}
+                            <span className="flex items-center justify-center gap-1">
+                                {freq.premium && !isPremium && <Lock size={10} />}
+                                {freq.label}
+                            </span>
                         </button>
                     ))}
                  </div>

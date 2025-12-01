@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle, Key, Crown, Camera } from 'lucide-react';
+import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle, Key, Crown, Camera, Lock } from 'lucide-react';
 import { User } from '../types';
 
 interface ProfileProps {
@@ -14,6 +14,9 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
+  // New Confirmation Modal State
+  const [isConfirmSaveModalOpen, setIsConfirmSaveModalOpen] = useState(false);
+
   // Password Change State
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
@@ -24,6 +27,8 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
   const [dropThreshold, setDropThreshold] = useState(user.notificationSettings?.dropThreshold ?? 10);
   const [gainThreshold, setGainThreshold] = useState(user.notificationSettings?.gainThreshold ?? 15);
   const [isSaved, setIsSaved] = useState(false);
+
+  const isPremium = user.plan === 'Premium';
 
   // Sync tempProfile and settings if user prop changes (e.g. external updates)
   useEffect(() => {
@@ -103,7 +108,13 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
       }
     }
 
+    // Open confirmation modal instead of saving directly
+    setIsConfirmSaveModalOpen(true);
+  };
+
+  const executeSaveProfile = () => {
     onUpdateUser(tempProfile);
+    setIsConfirmSaveModalOpen(false);
     setIsEditModalOpen(false);
   };
 
@@ -128,27 +139,28 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
     handleSaveSettings();
   };
 
-  const SettingItem = ({ icon: Icon, title, desc, onClick }: { icon: any, title: string, desc: string, onClick?: () => void }) => (
+  const SettingItem = ({ icon: Icon, title, desc, onClick, premiumOnly }: { icon: any, title: string, desc: string, onClick?: () => void, premiumOnly?: boolean }) => (
     <div 
-      onClick={onClick}
-      className={`flex items-center justify-between p-4 bg-zblack-950 rounded-2xl border border-zblack-800 transition-colors group ${onClick ? 'cursor-pointer hover:border-zgold-500/50' : ''}`}
+      onClick={premiumOnly && !isPremium ? onOpenPremium : onClick}
+      className={`flex items-center justify-between p-4 bg-zblack-950 rounded-2xl border border-zblack-800 transition-colors group relative ${onClick || premiumOnly ? 'cursor-pointer hover:border-zgold-500/50' : ''}`}
     >
-      <div className="flex items-center gap-4">
+      <div className={`flex items-center gap-4 ${premiumOnly && !isPremium ? 'opacity-50' : ''}`}>
         <div className={`p-3 bg-zblack-900 rounded-xl text-gray-400 transition-colors ${onClick ? 'group-hover:text-zgold-500' : ''}`}>
           <Icon size={20} />
         </div>
         <div>
-          <h4 className="font-medium text-white">{title}</h4>
+          <h4 className="font-medium text-white flex items-center gap-2">
+            {title}
+            {premiumOnly && !isPremium && <Lock size={12} className="text-zgold-500" />}
+          </h4>
           <p className="text-xs text-gray-500">{desc}</p>
         </div>
       </div>
-      {onClick && (
+      {(onClick || premiumOnly) && (
         <div className="w-2 h-2 rounded-full bg-zgold-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
       )}
     </div>
   );
-
-  const isPremium = user.plan === 'Premium';
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -225,6 +237,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
               icon={FileText} 
               title="Extratos & Relatórios" 
               desc="Baixar histórico em PDF/Excel" 
+              premiumOnly={true}
             />
             <SettingItem 
               icon={CreditCard} 
@@ -239,6 +252,19 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
           <h3 className="text-xl font-bold text-white mb-4">Configuração de Alertas</h3>
           <div className="bg-zblack-900 border border-zblack-800 rounded-3xl p-6 relative overflow-hidden h-full">
             
+            {!isPremium && (
+               <div className="absolute inset-0 bg-zblack-900/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="bg-zgold-500/10 p-3 rounded-full mb-3">
+                     <Lock className="text-zgold-500" size={24} />
+                  </div>
+                  <h4 className="font-bold text-white">Alertas Personalizados</h4>
+                  <p className="text-sm text-gray-400 mb-4">Usuários Free têm alertas fixos (10% Queda / 15% Ganho).</p>
+                  <button onClick={onOpenPremium} className="text-zgold-500 text-sm font-bold hover:underline">
+                     Desbloquear Controle Total
+                  </button>
+               </div>
+            )}
+
             <div className="flex justify-between items-center mb-8 pb-6 border-b border-zblack-800">
               <div>
                 <h4 className="text-lg font-bold text-white">Notificações Push</h4>
@@ -270,6 +296,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                   value={dropThreshold}
                   onChange={(e) => setDropThreshold(Number(e.target.value))}
                   className="w-full h-2 bg-zblack-950 rounded-lg appearance-none cursor-pointer accent-red-500"
+                  disabled={!isPremium}
                 />
                 <p className="text-xs text-gray-500 mt-2">Notificar quando um ativo desvalorizar mais de {dropThreshold}%.</p>
               </div>
@@ -290,6 +317,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                   value={gainThreshold}
                   onChange={(e) => setGainThreshold(Number(e.target.value))}
                   className="w-full h-2 bg-zblack-950 rounded-lg appearance-none cursor-pointer accent-green-500"
+                  disabled={!isPremium}
                 />
                 <p className="text-xs text-gray-500 mt-2">Notificar quando um ativo valorizar mais de {gainThreshold}%.</p>
               </div>
@@ -510,6 +538,35 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Save Modal */}
+      {isConfirmSaveModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zblack-900 border border-zblack-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200 text-center">
+            <div className="w-16 h-16 bg-zgold-500/10 text-zgold-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Salvar Alterações?</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Tem certeza que deseja atualizar os seus dados de perfil?
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setIsConfirmSaveModalOpen(false)}
+                className="flex-1 bg-zblack-950 hover:bg-zblack-800 text-gray-300 font-bold py-3 rounded-xl transition-colors border border-zblack-800"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={executeSaveProfile}
+                className="flex-1 bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20"
+              >
+                Confirmar
+              </button>
+            </div>
           </div>
         </div>
       )}
