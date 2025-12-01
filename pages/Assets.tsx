@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Trash2, Edit2, MoreVertical } from 'lucide-react';
+import { Plus, Search, Trash2, Edit2, MoreVertical, AlertTriangle } from 'lucide-react';
 import { formatKz } from '../constants';
 import { Asset, AssetType, User } from '../types';
 import { db } from '../services/db';
@@ -12,6 +12,10 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  
+  // Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState<string | null>(null);
   
   // Load assets on mount
   useEffect(() => {
@@ -32,10 +36,17 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
 
   const [formData, setFormData] = useState<Partial<Asset>>(initialFormState);
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Tem certeza que deseja remover este ativo?')) {
-      db.deleteAsset(id);
-      setAssets(assets.filter(a => a.id !== id));
+  const initiateDelete = (id: string) => {
+    setAssetToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (assetToDelete) {
+      db.deleteAsset(assetToDelete);
+      setAssets(assets.filter(a => a.id !== assetToDelete));
+      setIsDeleteModalOpen(false);
+      setAssetToDelete(null);
     }
   };
 
@@ -182,7 +193,7 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                            <Edit2 size={16} />
                          </button>
                          <button 
-                           onClick={() => handleDelete(asset.id)}
+                           onClick={() => initiateDelete(asset.id)}
                            className="p-2 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                            title="Remover"
                          >
@@ -300,6 +311,35 @@ const Assets: React.FC<AssetsProps> = ({ user }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zblack-900 border border-zblack-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200 text-center">
+            <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Excluir Ativo?</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Tem certeza que deseja remover este ativo da sua carteira? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 bg-zblack-950 hover:bg-zblack-800 text-gray-300 font-bold py-3 rounded-xl transition-colors border border-zblack-800"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-red-500/20"
+              >
+                Excluir
+              </button>
+            </div>
           </div>
         </div>
       )}
