@@ -39,18 +39,26 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
     e.preventDefault();
     setEditError(null);
 
-    const phone = tempProfile.phone || '';
-    // Remove spaces and dashes for validation
-    const cleanPhone = phone.replace(/[\s-]/g, '');
-
-    // Validation Logic:
-    // 1. Starts with +244 and has 9 digits after (Total 13: +2449xxxxxxxx)
-    // 2. Starts with 9 and has 8 digits after (Total 9: 9xxxxxxxx)
-    const isValidAngolan = /^(\+244)?9\d{8}$/.test(cleanPhone);
-
-    if (phone && !isValidAngolan) {
-      setEditError('Número inválido. Use o formato Angolano (ex: +244 923... ou 923...).');
+    // 1. Email Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!tempProfile.email || !emailRegex.test(tempProfile.email)) {
+      setEditError('Por favor, insira um endereço de email válido.');
       return;
+    }
+
+    // 2. Phone Validation (Angolan Format)
+    const phone = tempProfile.phone || '';
+    if (phone) {
+      // Remove spaces and dashes for validation check
+      const cleanPhone = phone.replace(/[\s-]/g, '');
+      
+      // Check: Either starts with +244 followed by 9 digits OR starts with 9 followed by 8 digits
+      const isValidAngolan = /^(\+244)?9\d{8}$/.test(cleanPhone);
+
+      if (!isValidAngolan) {
+        setEditError('Número inválido. Use o formato Angolano (ex: +244 923... ou 923...).');
+        return;
+      }
     }
 
     onUpdateUser(tempProfile);

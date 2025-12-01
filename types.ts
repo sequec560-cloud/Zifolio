@@ -7,6 +7,7 @@ export enum AssetType {
 
 export interface Asset {
   id: string;
+  userId: string; // Linked to User
   name: string; // e.g., "OT-NR-2025"
   type: AssetType;
   purchaseDate: string;
@@ -36,7 +37,8 @@ export interface NewsArticle {
   id: string;
   title: string;
   source: string;
-  date: string;
+  date: string; // Display text e.g. "2 Horas atrás"
+  publishedAt: string; // ISO Date YYYY-MM-DD for filtering
   summary: string;
   content?: string;
   category: 'Mercado' | 'Empresas' | 'Regulação' | 'Global';
@@ -58,6 +60,15 @@ export interface User {
   password?: string; // Stored locally for MVP demo purposes only
   phone?: string;
   plan?: 'Free' | 'Premium';
+  planExpiryDate?: string; // ISO Date
+  createdAt: string;
+}
+
+export interface Feedback {
+  id: string;
+  userId: string;
+  type: 'suggestion' | 'bug' | 'other';
+  message: string;
   createdAt: string;
 }
 

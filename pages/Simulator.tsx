@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { formatKz } from '../constants';
-import { TrendingUp, Info } from 'lucide-react';
+import { Info, Crown, Calendar, ArrowRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { User } from '../types';
 
-const Simulator: React.FC = () => {
+interface SimulatorProps {
+  user: User;
+}
+
+const Simulator: React.FC<SimulatorProps> = ({ user }) => {
   const [amount, setAmount] = useState(1000000);
   const [rate, setRate] = useState(16.5);
   const [years, setYears] = useState(3);
@@ -31,8 +36,10 @@ const Simulator: React.FC = () => {
     setTotalReturns(currentAmount - amount);
   };
 
+  const isPremium = user.plan === 'Premium';
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-white">Simulador de Investimento</h2>
         <p className="text-gray-400 mt-2">Projete os seus ganhos com base nas taxas atuais da BODIVA.</p>
@@ -40,7 +47,7 @@ const Simulator: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Controls */}
+        {/* Controls Column */}
         <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl h-fit">
           <h3 className="font-bold text-white mb-6 flex items-center gap-2">
              <span className="w-1 h-6 bg-zgold-500 rounded-full"></span>
@@ -108,17 +115,45 @@ const Simulator: React.FC = () => {
           </div>
         </div>
 
-        {/* Results */}
+        {/* Right Column: Status + Chart + Results */}
         <div className="lg:col-span-2 space-y-6">
-           {/* Summary Cards */}
-           <div className="grid grid-cols-2 gap-4">
-              <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
-                <p className="text-gray-400 text-sm">Valor Final Estimado</p>
-                <p className="text-3xl font-bold text-white mt-2 font-mono tracking-tight">{formatKz(amount + totalReturns)}</p>
+           
+           {/* Account Status Card */}
+           <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-zgold-500/5 to-transparent pointer-events-none" />
+              <div className="flex items-center gap-4 z-10">
+                <div className={`p-4 rounded-full ${isPremium ? 'bg-zgold-500 text-black' : 'bg-zblack-800 text-gray-400'}`}>
+                  <Crown size={24} />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Estado da Conta</p>
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    {isPremium ? 'Membro Premium' : 'Plano Gratuito'}
+                    {isPremium && <span className="text-xs bg-zgold-500 text-black px-2 py-0.5 rounded-full font-bold">PRO</span>}
+                  </h3>
+                  {isPremium && user.planExpiryDate && (
+                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                      <Calendar size={12} /> Expira em: {user.planExpiryDate}
+                    </p>
+                  )}
+                  {isPremium && !user.planExpiryDate && (
+                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                      <Calendar size={12} /> Expira em: 2025-12-31 (Demo)
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
-                <p className="text-gray-400 text-sm">Total Juros (Lucro)</p>
-                <p className="text-3xl font-bold text-green-500 mt-2 font-mono tracking-tight">+{formatKz(totalReturns)}</p>
+              
+              <div className="z-10 w-full md:w-auto">
+                {!isPremium ? (
+                   <button className="w-full md:w-auto bg-zgold-500 hover:bg-zgold-400 text-black font-bold px-6 py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20 flex items-center justify-center gap-2">
+                     Tornar-se Premium <ArrowRight size={18} />
+                   </button>
+                ) : (
+                  <div className="px-4 py-2 border border-zgold-500/30 bg-zgold-500/10 rounded-xl text-zgold-500 text-sm font-medium text-center">
+                     Benefícios Ativos
+                  </div>
+                )}
               </div>
            </div>
 
@@ -151,6 +186,25 @@ const Simulator: React.FC = () => {
                     />
                   </AreaChart>
                 </ResponsiveContainer>
+              </div>
+           </div>
+
+           {/* Results - Below the chart */}
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors">
+                <p className="text-gray-400 text-xs uppercase tracking-wide">Total Investido</p>
+                <p className="text-2xl font-bold text-white mt-1 font-mono tracking-tight">{formatKz(amount)}</p>
+              </div>
+              
+              <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors">
+                <p className="text-gray-400 text-xs uppercase tracking-wide">Estimativa de Juros</p>
+                <p className="text-2xl font-bold text-green-500 mt-1 font-mono tracking-tight">+{formatKz(totalReturns)}</p>
+              </div>
+
+              <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-zgold-500/10 rounded-full blur-xl"></div>
+                <p className="text-zgold-500 text-xs uppercase tracking-wide font-bold">Valor Final Estimado</p>
+                <p className="text-2xl font-bold text-white mt-1 font-mono tracking-tight">{formatKz(amount + totalReturns)}</p>
               </div>
            </div>
         </div>

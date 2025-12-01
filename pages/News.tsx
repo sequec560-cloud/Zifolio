@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, Globe, ExternalLink, Filter, ArrowRight, Minus, Calendar, User, Search } from 'lucide-react';
+import { TrendingUp, TrendingDown, Globe, ExternalLink, Filter, ArrowRight, Minus, Calendar, User, Search, X } from 'lucide-react';
 import { MOCK_NEWS, MARKET_INDICATORS } from '../constants';
 import { NewsArticle } from '../types';
 
@@ -10,25 +10,41 @@ interface NewsProps {
 const News: React.FC<NewsProps> = ({ onArticleClick }) => {
   const [filter, setFilter] = useState<string>('Todos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  
   const categories = ['Todos', 'Mercado', 'Empresas', 'Regulação', 'Global'];
 
   const filteredNews = MOCK_NEWS.filter(n => {
+    // Category Filter
     const matchesCategory = filter === 'Todos' || n.category === filter;
+    
+    // Search Filter
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = n.title.toLowerCase().includes(searchLower) || 
                           n.summary.toLowerCase().includes(searchLower);
-    return matchesCategory && matchesSearch;
+    
+    // Date Range Filter
+    const matchesDate = (!startDate || n.publishedAt >= startDate) &&
+                        (!endDate || n.publishedAt <= endDate);
+                        
+    return matchesCategory && matchesSearch && matchesDate;
   });
 
   // Triple the indicators to ensure smooth infinite scrolling on wider screens
   const tickerItems = [...MARKET_INDICATORS, ...MARKET_INDICATORS, ...MARKET_INDICATORS];
 
-  // Featured article logic: Only show featured layout if not searching and viewing 'Todos'
-  const isSearching = searchQuery.length > 0;
-  const featuredArticle = (!isSearching && filter === 'Todos') ? MOCK_NEWS[0] : null;
+  // Featured article logic: Only show featured layout if not filtering by specific criteria
+  const isFiltering = searchQuery.length > 0 || startDate !== '' || endDate !== '';
+  const featuredArticle = (!isFiltering && filter === 'Todos') ? MOCK_NEWS[0] : null;
   
   // If we have a featured article, exclude it from the list. Otherwise show all matches.
   const listNews = featuredArticle ? filteredNews.filter(n => n.id !== featuredArticle.id) : filteredNews;
+
+  const clearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -43,6 +59,10 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
         }
         .animate-scroll:hover {
           animation-play-state: paused;
+        }
+        /* Style date inputs for dark mode */
+        input[type="date"] {
+          color-scheme: dark;
         }
       `}</style>
 
@@ -101,30 +121,67 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
         </div>
       </div>
 
-      {/* Controls: Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        {/* Search Bar */}
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
-          <input 
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar notícias..." 
-            className="w-full bg-zblack-900 border border-zblack-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
-          />
+      {/* Controls: Search, Date Filter & Category Tabs */}
+      <div className="space-y-4">
+        
+        {/* Top Row: Search and Date Inputs */}
+        <div className="flex flex-col lg:flex-row gap-4">
+          
+          {/* Search Bar */}
+          <div className="relative w-full lg:w-96 flex-shrink-0">
+            <Search className="absolute left-4 top-3.5 text-gray-500" size={20} />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Pesquisar notícias..." 
+              className="w-full bg-zblack-900 border border-zblack-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+            />
+          </div>
+
+          {/* Date Range Filter */}
+          <div className="flex flex-1 flex-col sm:flex-row gap-2 bg-zblack-900 border border-zblack-800 rounded-2xl p-2 items-center">
+             <div className="flex items-center gap-2 w-full">
+               <span className="text-xs text-gray-500 font-medium ml-2">De</span>
+               <input 
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-zblack-950 border border-zblack-800 text-gray-300 text-sm rounded-xl px-3 py-2 outline-none focus:border-zgold-500 w-full"
+               />
+             </div>
+             <div className="hidden sm:block text-gray-600">-</div>
+             <div className="flex items-center gap-2 w-full">
+               <span className="text-xs text-gray-500 font-medium ml-2 sm:ml-0">Até</span>
+               <input 
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-zblack-950 border border-zblack-800 text-gray-300 text-sm rounded-xl px-3 py-2 outline-none focus:border-zgold-500 w-full"
+               />
+             </div>
+             {(startDate || endDate) && (
+               <button 
+                onClick={clearDateFilter}
+                className="p-2 hover:bg-zblack-800 rounded-lg text-gray-400 hover:text-red-400 transition-colors"
+                title="Limpar datas"
+               >
+                 <X size={16} />
+               </button>
+             )}
+          </div>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex overflow-x-auto gap-3 pb-2 md:pb-0 scrollbar-hide w-full md:w-auto p-1">
+        <div className="flex overflow-x-auto gap-3 pb-2 md:pb-0 scrollbar-hide w-full p-1">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-300 border ${
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 border ${
                 filter === cat 
-                  ? 'bg-zblack-800 text-zgold-500 border-zgold-500 shadow-[0_0_15px_rgba(240,152,5,0.15)] transform scale-105' 
-                  : 'bg-zblack-900 text-gray-400 border-zblack-800 hover:border-gray-600 hover:text-gray-200'
+                  ? 'bg-zblack-950 text-zgold-500 border-zgold-500 shadow-[0_0_20px_rgba(240,152,5,0.2)] transform scale-105' 
+                  : 'bg-zblack-900/50 text-gray-500 border-zblack-800 hover:bg-zblack-900 hover:text-gray-300'
               }`}
             >
               {cat}
@@ -137,7 +194,7 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
       {featuredArticle && (
         <div 
           onClick={() => onArticleClick(featuredArticle)}
-          className="relative h-[400px] w-full bg-zblack-900 rounded-3xl overflow-hidden cursor-pointer group border border-zblack-800"
+          className="relative h-[400px] w-full bg-zblack-900 rounded-3xl overflow-hidden cursor-pointer group border border-zblack-800 hover:scale-[1.01] hover:shadow-2xl hover:shadow-zgold-500/10 transition-all duration-500"
         >
           <img 
             src={featuredArticle.imageUrl} 
@@ -175,7 +232,7 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
             <div 
               key={news.id}
               onClick={() => onArticleClick(news)}
-              className="group bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden hover:border-zgold-500/30 transition-all duration-300 flex flex-col cursor-pointer h-full"
+              className="group bg-zblack-900 border border-zblack-800 rounded-3xl overflow-hidden hover:border-zgold-500/30 hover:scale-[1.02] hover:shadow-xl hover:shadow-zgold-500/10 transition-all duration-300 flex flex-col cursor-pointer h-full"
             >
               <div className="relative h-48 overflow-hidden">
                 <img 
@@ -218,7 +275,7 @@ const News: React.FC<NewsProps> = ({ onArticleClick }) => {
             <Search className="text-gray-500" size={24} />
           </div>
           <h3 className="text-xl font-bold text-white mb-2">Nenhum resultado encontrado</h3>
-          <p className="text-gray-400">Tente pesquisar por outros termos ou categorias.</p>
+          <p className="text-gray-400">Tente ajustar seus filtros de pesquisa ou datas.</p>
         </div>
       )}
     </div>

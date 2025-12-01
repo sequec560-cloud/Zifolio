@@ -3,6 +3,7 @@ import { Asset, AssetType, Transaction, NewsArticle, MarketIndicator } from './t
 export const MOCK_ASSETS: Asset[] = [
   {
     id: '1',
+    userId: 'mock-user-1',
     name: 'OT-NR-2026',
     type: AssetType.OT,
     purchaseDate: '2023-05-15',
@@ -13,6 +14,7 @@ export const MOCK_ASSETS: Asset[] = [
   },
   {
     id: '2',
+    userId: 'mock-user-1',
     name: 'Sonangol 2027',
     type: AssetType.CORP,
     purchaseDate: '2023-09-10',
@@ -23,6 +25,7 @@ export const MOCK_ASSETS: Asset[] = [
   },
   {
     id: '3',
+    userId: 'mock-user-1',
     name: 'BAI Ações',
     type: AssetType.STOCK,
     purchaseDate: '2024-01-20',
@@ -45,6 +48,7 @@ export const MOCK_NEWS: NewsArticle[] = [
     title: 'BODIVA regista recorde de negociações em Outubro',
     source: 'Expansão',
     date: '2 Horas atrás',
+    publishedAt: '2024-11-15',
     summary: 'O mercado de dívida pública secundário movimentou mais de 50 mil milhões de Kz, impulsionado pela procura de OTs indexadas.',
     content: `A Bolsa de Dívida e Valores de Angola (BODIVA) registou um volume recorde de negociações no mês de Outubro, superando os 50 mil milhões de Kwanzas em transações no mercado secundário. Este crescimento expressivo foi impulsionado principalmente pela elevada procura de Obrigações do Tesouro (OTs) indexadas ao dólar, numa altura em que os investidores procuram refúgio contra a volatilidade cambial.
 
@@ -59,6 +63,7 @@ O aumento da literacia financeira e a digitalização dos processos de intermedi
     title: 'BNA mantém taxas de juro inalteradas',
     source: 'Jornal de Angola',
     date: '1 Dia atrás',
+    publishedAt: '2024-11-14',
     summary: 'O Comité de Política Monetária do Banco Nacional de Angola decidiu manter a taxa BNA em 19.5% para controlar a inflação.',
     content: `O Comité de Política Monetária (CPM) do Banco Nacional de Angola (BNA) decidiu, na sua última reunião ordinária, manter a Taxa BNA em 19,5%. A decisão visa consolidar a trajectória de desaceleração da inflação e garantir a estabilidade de preços na economia nacional.
 
@@ -73,6 +78,7 @@ Para além da Taxa BNA, foram também mantidas as taxas de juro da Facilidade Pe
     title: 'Sonangol prepara nova emissão de obrigações',
     source: 'Economia & Mercado',
     date: '2 Dias atrás',
+    publishedAt: '2024-11-13',
     summary: 'A petrolífera nacional anunciou planos para voltar à bolsa em 2025 com uma oferta pública de obrigações verdes.',
     content: `A Sonangol E.P. está a preparar o regresso ao mercado de capitais com uma nova emissão obrigacionista prevista para o primeiro trimestre de 2025. Desta vez, a petrolífera nacional pretende lançar "Obrigações Verdes" (Green Bonds), destinadas a financiar projectos de transição energética e sustentabilidade, nomeadamente a construção de centrais solares no sul do país.
 
@@ -87,6 +93,7 @@ A primeira emissão da Sonangol na BODIVA, realizada em 2023, foi um sucesso his
     title: 'Preço do Brent sobe e beneficia exportações',
     source: 'Bloomberg AO',
     date: '3 Dias atrás',
+    publishedAt: '2024-11-12',
     summary: 'A cotação do barril de petróleo atingiu os 85 USD, melhorando as perspectivas fiscais para o próximo trimestre.',
     content: `O preço do barril de petróleo Brent, referência para as exportações angolanas, registou uma subida acentuada esta semana, fixando-se acima dos 85 USD. A valorização é impulsionada pelos cortes de produção anunciados pela OPEP+ e pelo aumento da procura na Ásia, à medida que a economia chinesa dá sinais de recuperação industrial.
 

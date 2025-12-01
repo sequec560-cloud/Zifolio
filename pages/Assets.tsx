@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Trash2, Edit2, MoreVertical } from 'lucide-react';
-import { MOCK_ASSETS, formatKz } from '../constants';
-import { Asset, AssetType } from '../types';
+import { formatKz } from '../constants';
+import { Asset, AssetType, User } from '../types';
+import { db } from '../services/db';
 
-const Assets: React.FC = () => {
-  const [assets, setAssets] = useState<Asset[]>(MOCK_ASSETS);
+interface AssetsProps {
+  user: User;
+}
+
+const Assets: React.FC<AssetsProps> = ({ user }) => {
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
+  // Load assets on mount
+  useEffect(() => {
+    if (user) {
+      setAssets(db.getUserAssets(user.id));
+    }
+  }, [user]);
+
   // New Asset Form State
   const initialFormState = {
     name: '',
@@ -22,6 +34,7 @@ const Assets: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (window.confirm('Tem certeza que deseja remover este ativo?')) {
+      db.deleteAsset(id);
       setAssets(assets.filter(a => a.id !== id));
     }
   };
@@ -47,32 +60,16 @@ const Assets: React.FC = () => {
 
   const handleSaveAsset = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.investedAmount) return;
+    if (!formData.name || !formData.investedAmount || !user) return;
 
     // Calculate unit price based on inputs (MVP logic)
     const currentPriceUnit = Number(formData.investedAmount) / Number(formData.quantity);
 
     if (editingId) {
       // Update existing asset
-      setAssets(assets.map(asset => {
-        if (asset.id === editingId) {
-          return {
-            ...asset,
-            name: formData.name!,
-            type: formData.type as AssetType,
-            investedAmount: Number(formData.investedAmount),
-            quantity: Number(formData.quantity),
-            interestRate: Number(formData.interestRate),
-            currentPriceUnit: currentPriceUnit,
-            purchaseDate: formData.purchaseDate!,
-          };
-        }
-        return asset;
-      }));
-    } else {
-      // Create new asset
-      const assetToAdd: Asset = {
-        id: Math.random().toString(36).substr(2, 9),
+      const updatedAsset: Asset = {
+        id: editingId,
+        userId: user.id,
         name: formData.name!,
         type: formData.type as AssetType,
         investedAmount: Number(formData.investedAmount),
@@ -81,6 +78,27 @@ const Assets: React.FC = () => {
         currentPriceUnit: currentPriceUnit,
         purchaseDate: formData.purchaseDate!,
       };
+      
+      db.updateAsset(updatedAsset);
+      
+      setAssets(assets.map(asset => 
+        asset.id === editingId ? updatedAsset : asset
+      ));
+    } else {
+      // Create new asset
+      const assetToAdd: Asset = {
+        id: Math.random().toString(36).substr(2, 9),
+        userId: user.id,
+        name: formData.name!,
+        type: formData.type as AssetType,
+        investedAmount: Number(formData.investedAmount),
+        quantity: Number(formData.quantity),
+        interestRate: Number(formData.interestRate),
+        currentPriceUnit: currentPriceUnit,
+        purchaseDate: formData.purchaseDate!,
+      };
+      
+      db.saveAsset(assetToAdd);
       setAssets([...assets, assetToAdd]);
     }
 
@@ -129,13 +147,13 @@ const Assets: React.FC = () => {
               {assets.map((asset) => {
                 const currentValue = asset.quantity * asset.currentPriceUnit;
                 const profit = currentValue - asset.investedAmount;
-                const profitPercent = (profit / asset.investedAmount) * 100;
+                const profitPercent = asset.investedAmount > 0 ? (profit / asset.investedAmount) * 100 : 0;
 
                 return (
                   <tr key={asset.id} className="hover:bg-zblack-800/50 transition-colors group">
                     <td className="p-4">
                       <p className="font-bold text-white">{asset.name}</p>
-                      <p className="text-xs text-green-500">
+                      <p className={`text-xs ${profitPercent >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                         {profitPercent > 0 ? '+' : ''}{profitPercent.toFixed(1)}%
                       </p>
                     </td>
@@ -208,6 +226,7 @@ const Assets: React.FC = () => {
                   onChange={e => setFormData({...formData, name: e.target.value})}
                   className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
                   placeholder="Ex: OT-NR-2025"
+                  required
                 />
               </div>
 
@@ -229,6 +248,7 @@ const Assets: React.FC = () => {
                       value={formData.purchaseDate}
                       onChange={e => setFormData({...formData, purchaseDate: e.target.value})}
                       className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
+                      required
                    />
                 </div>
               </div>
@@ -241,6 +261,8 @@ const Assets: React.FC = () => {
                       value={formData.investedAmount}
                       onChange={e => setFormData({...formData, investedAmount: Number(e.target.value)})}
                       className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
+                      min="0"
+                      required
                    />
                 </div>
                 <div>
@@ -251,6 +273,8 @@ const Assets: React.FC = () => {
                       value={formData.interestRate}
                       onChange={e => setFormData({...formData, interestRate: Number(e.target.value)})}
                       className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
+                      min="0"
+                      required
                    />
                 </div>
               </div>
@@ -262,6 +286,8 @@ const Assets: React.FC = () => {
                       value={formData.quantity}
                       onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
                       className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors"
+                      min="1"
+                      required
                    />
                 </div>
 

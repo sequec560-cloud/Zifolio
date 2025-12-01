@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -9,34 +9,56 @@ import {
   Minus,
   Calendar,
   Percent,
-  ShieldAlert
+  ShieldAlert,
+  BarChart2
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { MOCK_ASSETS, MOCK_TRANSACTIONS, MARKET_INDICATORS, formatKz } from '../constants';
-import { User, AssetType } from '../types';
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell,
+  BarChart,
+  Bar
+} from 'recharts';
+import { MOCK_TRANSACTIONS, MARKET_INDICATORS, formatKz } from '../constants';
+import { User, AssetType, Asset } from '../types';
+import { db } from '../services/db';
 
 interface DashboardProps {
   user: User;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user }) => {
-  // Aggregate calculations
-  const totalInvested = MOCK_ASSETS.reduce((acc, curr) => acc + curr.investedAmount, 0);
-  const currentTotalValue = MOCK_ASSETS.reduce((acc, curr) => acc + (curr.quantity * curr.currentPriceUnit), 0);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Load assets for the current user
+    const userAssets = db.getUserAssets(user.id);
+    setAssets(userAssets);
+    setLoading(false);
+  }, [user.id]);
+
+  // Aggregate calculations based on REAL data
+  const totalInvested = assets.reduce((acc, curr) => acc + curr.investedAmount, 0);
+  const currentTotalValue = assets.reduce((acc, curr) => acc + (curr.quantity * curr.currentPriceUnit), 0);
   const totalProfit = currentTotalValue - totalInvested;
-  const profitPercentage = ((totalProfit / totalInvested) * 100).toFixed(2);
-  const monthlyYield = 1.8; // Hardcoded for MVP visualization
+  const profitPercentage = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(2) : "0.00";
+  const monthlyYield = 1.8; // Hardcoded for MVP visualization (mock)
 
   // New Performance Metrics Calculations
   
   // 1. Average Annual Return (Weighted by investment amount)
-  const weightedInterestRate = totalInvested > 0 ? MOCK_ASSETS.reduce((acc, asset) => {
-    // Stocks might have 0 interest rate in this model, but we use what's there
+  const weightedInterestRate = totalInvested > 0 ? assets.reduce((acc, asset) => {
     return acc + (asset.investedAmount * (asset.interestRate || 0));
   }, 0) / totalInvested : 0;
 
   // 2. Risk Score Calculation
-  // 1 = Low (Treasury), 3 = Medium (Corp), 5 = High (Stocks)
   const getRiskWeight = (type: AssetType) => {
     switch (type) {
       case AssetType.OT:
@@ -51,43 +73,95 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     }
   };
 
-  const riskScore = totalInvested > 0 ? MOCK_ASSETS.reduce((acc, asset) => {
+  const riskScore = totalInvested > 0 ? assets.reduce((acc, asset) => {
     return acc + (asset.investedAmount * getRiskWeight(asset.type));
   }, 0) / totalInvested : 0;
 
-  let riskLabel = 'Conservador';
-  let riskColor = 'text-green-500';
-  if (riskScore > 1.5 && riskScore <= 3.5) {
-    riskLabel = 'Moderado';
-    riskColor = 'text-yellow-500';
-  } else if (riskScore > 3.5) {
-    riskLabel = 'Agressivo';
-    riskColor = 'text-red-500';
+  let riskLabel = 'N/A';
+  let riskColor = 'text-gray-500';
+
+  if (totalInvested > 0) {
+    if (riskScore <= 1.5) {
+        riskLabel = 'Conservador';
+        riskColor = 'text-green-500';
+    } else if (riskScore > 1.5 && riskScore <= 3.5) {
+        riskLabel = 'Moderado';
+        riskColor = 'text-yellow-500';
+    } else {
+        riskLabel = 'Agressivo';
+        riskColor = 'text-red-500';
+    }
   }
 
-  // 3. YTD Return (Simulated for this context as ~80% of total profit percentage for the year)
+  // 3. YTD Return (Simulated for this context)
   const ytdReturn = (Number(profitPercentage) * 0.85).toFixed(2);
+  const ytdChartData = [
+    { name: 'Jan', val: 10 }, { name: 'Fev', val: 25 }, { name: 'Mar', val: 18 },
+    { name: 'Abr', val: 30 }, { name: 'Mai', val: 45 }, { name: 'Jun', val: 35 },
+    { name: 'Jul', val: 55 }, { name: 'Ago', val: 50 }, { name: 'Set', val: 70 },
+    { name: 'Out', val: 85 }
+  ];
 
 
-  // Chart Data Preparation
+  // Chart Data Preparation (Static Mock for Evolution as we don't store historical data yet)
   const evolutionData = [
-    { month: 'Jan', value: 1000000 },
-    { month: 'Fev', value: 1200000 },
-    { month: 'Mar', value: 1150000 },
-    { month: 'Abr', value: 1800000 },
-    { month: 'Mai', value: 2100000 },
-    { month: 'Jun', value: 2400000 },
-    { month: 'Jul', value: 2824500 },
+    { month: 'Jan', value: Number(currentTotalValue) * 0.8 },
+    { month: 'Fev', value: Number(currentTotalValue) * 0.85 },
+    { month: 'Mar', value: Number(currentTotalValue) * 0.88 },
+    { month: 'Abr', value: Number(currentTotalValue) * 0.92 },
+    { month: 'Mai', value: Number(currentTotalValue) * 0.95 },
+    { month: 'Jun', value: Number(currentTotalValue) * 0.98 },
+    { month: 'Jul', value: Number(currentTotalValue) },
   ];
 
-  const distributionData = [
-    { name: 'Obrigações', value: 60, color: '#f09805' },
-    { name: 'Ações', value: 25, color: '#e5e5e5' },
-    { name: 'Liquidez', value: 15, color: '#333333' },
-  ];
+  // Distribution Data
+  // Dynamic Pie Chart Data
+  const assetsByTypeRaw = assets.reduce((acc, asset) => {
+    const value = asset.quantity * asset.currentPriceUnit;
+    const existing = acc[asset.type] || 0;
+    acc[asset.type] = Number(existing) + Number(value);
+    return acc;
+  }, {} as Record<string, number>);
+
+  const distributionColors: Record<string, string> = {
+     [AssetType.OT]: '#f09805',
+     [AssetType.BT]: '#d27803',
+     [AssetType.CORP]: '#e5e5e5',
+     [AssetType.STOCK]: '#333333'
+  };
+
+  const distributionData = Object.entries(assetsByTypeRaw).map(([type, value]) => ({
+    name: type === AssetType.OT ? 'OTs' : type === AssetType.BT ? 'BTs' : type === AssetType.CORP ? 'Corp' : 'Ações',
+    value: parseFloat(((value as number / currentTotalValue) * 100).toFixed(1)),
+    color: distributionColors[type] || '#888'
+  }));
+  
+  // If no assets, show empty placeholder in chart
+  if (distributionData.length === 0) {
+      distributionData.push({ name: 'Sem dados', value: 100, color: '#1f1f1f' });
+  }
+
+  // Bar Chart Data (Detailed Breakdown)
+  const shortNameMap: Record<string, string> = {
+    [AssetType.OT]: 'OTs',
+    [AssetType.BT]: 'BTs',
+    [AssetType.CORP]: 'Corp',
+    [AssetType.STOCK]: 'Ações',
+  };
+
+  const assetTypeData = Object.entries(assetsByTypeRaw).map(([type, value]) => ({
+    name: shortNameMap[type] || type,
+    fullName: type,
+    value: value as number
+  })).sort((a, b) => b.value - a.value);
+
 
   // Ticker Data (Tripled for smooth infinite scroll)
   const tickerItems = [...MARKET_INDICATORS, ...MARKET_INDICATORS, ...MARKET_INDICATORS];
+
+  if (loading) {
+      return <div className="p-10 text-center text-gray-500 animate-pulse">Carregando dados da carteira...</div>;
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -201,8 +275,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div className="p-3 bg-zblack-950 rounded-xl text-zgold-500">
                 <TrendingUp size={24} />
               </div>
-              <span className="text-green-500 bg-green-500/10 px-3 py-1 rounded-full text-xs font-medium">
-                +{profitPercentage}%
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${Number(profitPercentage) >= 0 ? 'text-green-500 bg-green-500/10' : 'text-red-500 bg-red-500/10'}`}>
+                {Number(profitPercentage) >= 0 ? '+' : ''}{profitPercentage}%
               </span>
             </div>
             <div>
@@ -247,22 +321,32 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
       {/* Performance Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* YTD Return */}
-        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-zblack-950 rounded-xl text-purple-400">
-              <Calendar size={20} />
+        {/* YTD Return with Mini Chart */}
+        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex flex-col justify-between hover:border-zgold-500/30 transition-colors relative overflow-hidden h-[130px]">
+          <div className="flex justify-between items-start z-10">
+            <div className="flex items-center gap-3">
+               <div className="p-2 bg-zblack-950 rounded-lg text-purple-400">
+                  <Calendar size={18} />
+               </div>
+               <div>
+                  <p className="text-gray-400 text-xs">Retorno YTD</p>
+                  <p className="text-xl font-bold text-white mt-0.5">+{ytdReturn}%</p>
+               </div>
             </div>
-            <div>
-              <p className="text-gray-400 text-xs">Retorno YTD</p>
-              <p className="text-xl font-bold text-white mt-0.5">+{ytdReturn}%</p>
-            </div>
+            <span className="text-[10px] text-gray-500 bg-zblack-950 px-2 py-1 rounded-full z-20">Desde Jan</span>
           </div>
-          <span className="text-xs text-gray-500">Desde Jan 1</span>
+          
+          <div className="absolute bottom-0 right-0 left-0 h-14 px-4 pb-2 opacity-50">
+             <ResponsiveContainer width="100%" height="100%">
+               <BarChart data={ytdChartData}>
+                 <Bar dataKey="val" fill="#c084fc" radius={[2, 2, 0, 0]} barSize={6} />
+               </BarChart>
+             </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Avg Annual Return */}
-        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors">
+        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors h-[130px]">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-zblack-950 rounded-xl text-zgold-500">
               <Percent size={20} />
@@ -276,7 +360,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         </div>
 
         {/* Risk Score */}
-        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors">
+        <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl flex items-center justify-between hover:border-zgold-500/30 transition-colors h-[130px]">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-zblack-950 rounded-xl text-red-400">
               <ShieldAlert size={20} />
@@ -294,7 +378,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-white">Evolução da Carteira</h3>
+            <h3 className="text-lg font-bold text-white">Evolução da Carteira (Simulado)</h3>
             <select className="bg-zblack-950 text-gray-400 border border-zblack-800 rounded-lg text-sm px-3 py-1 outline-none focus:border-zgold-500">
               <option>Últimos 6 meses</option>
               <option>1 Ano</option>
@@ -312,6 +396,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#141414', borderColor: '#333', borderRadius: '12px' }}
                   itemStyle={{ color: '#f09805' }}
+                  formatter={(value: number) => formatKz(value)}
                 />
                 <XAxis dataKey="month" stroke="#333" />
                 <YAxis hide />
@@ -342,7 +427,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
              </ResponsiveContainer>
              {/* Center Text */}
              <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                <span className="text-3xl font-bold text-white">3</span>
+                <span className="text-3xl font-bold text-white">{distributionData.length}</span>
                 <span className="text-xs text-gray-500">Tipos</span>
              </div>
            </div>
@@ -388,6 +473,53 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           ))}
         </div>
       </div>
+
+      {/* Bar Chart Breakdown */}
+      {assets.length > 0 && (
+        <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <BarChart2 size={20} className="text-zgold-500" />
+              Composição Detalhada
+            </h3>
+          </div>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={assetTypeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                  contentStyle={{ backgroundColor: '#141414', borderColor: '#333', borderRadius: '12px' }}
+                  itemStyle={{ color: '#f09805' }}
+                  formatter={(value: any) => [formatKz(Number(value)), "Valor Atual"]}
+                  labelStyle={{ color: '#999' }}
+                />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#444" 
+                  tick={{fill: '#888', fontSize: 12}} 
+                  axisLine={false} 
+                  tickLine={false} 
+                />
+                <YAxis hide />
+                <Bar 
+                  dataKey="value" 
+                  fill="#f09805" 
+                  radius={[6, 6, 0, 0]} 
+                  barSize={50}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+            {assetTypeData.map((item, index) => (
+               <div key={index} className="bg-zblack-950 rounded-lg p-3 text-center border border-zblack-800">
+                  <p className="text-xs text-gray-500 mb-1">{item.fullName}</p>
+                  <p className="font-mono font-bold text-white text-sm">{formatKz(item.value)}</p>
+               </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );

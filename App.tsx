@@ -7,7 +7,10 @@ import {
   LogOut, 
   Menu,
   X,
-  Newspaper
+  Newspaper,
+  MessageSquarePlus,
+  Send,
+  Check
 } from 'lucide-react';
 import { ViewState, NewsArticle, User } from './types';
 import Login from './pages/Login';
@@ -24,6 +27,12 @@ const App: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Feedback State
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<'suggestion' | 'bug' | 'other'>('suggestion');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
@@ -44,6 +53,25 @@ const App: React.FC = () => {
   const handleUpdateUser = (updatedUser: User) => {
     db.updateUser(updatedUser);
     setCurrentUser(updatedUser);
+  };
+
+  const handleSubmitFeedback = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackMessage.trim() || !currentUser) return;
+
+    db.saveFeedback({
+      userId: currentUser.id,
+      type: feedbackType,
+      message: feedbackMessage
+    });
+
+    setFeedbackSent(true);
+    setTimeout(() => {
+      setFeedbackSent(false);
+      setIsFeedbackOpen(false);
+      setFeedbackMessage('');
+      setFeedbackType('suggestion');
+    }, 2000);
   };
 
   const NavItem = ({ view, icon: Icon, label }: { view: ViewState; icon: any; label: string }) => (
@@ -117,21 +145,32 @@ const App: React.FC = () => {
           </nav>
         </div>
 
-        <button 
-          onClick={handleLogout}
-          className="flex items-center space-x-3 w-full p-3 rounded-xl text-gray-400 hover:bg-red-500/10 hover:text-red-500 transition-colors"
-        >
-          <LogOut size={20} />
-          <span>Sair</span>
-        </button>
+        <div className="space-y-2">
+          {/* Feedback Button */}
+          <button 
+            onClick={() => setIsFeedbackOpen(true)}
+            className="flex items-center space-x-3 w-full p-3 rounded-xl text-gray-400 hover:bg-zblack-800 hover:text-zgold-500 transition-colors"
+          >
+            <MessageSquarePlus size={20} />
+            <span>Feedback</span>
+          </button>
+
+          <button 
+            onClick={handleLogout}
+            className="flex items-center space-x-3 w-full p-3 rounded-xl text-gray-400 hover:bg-red-500/10 hover:text-red-500 transition-colors"
+          >
+            <LogOut size={20} />
+            <span>Sair</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 h-screen">
         <div className="max-w-5xl mx-auto pb-20 md:pb-0">
           {currentView === 'dashboard' && <Dashboard user={currentUser} />}
-          {currentView === 'assets' && <Assets />}
-          {currentView === 'simulator' && <Simulator />}
+          {currentView === 'assets' && <Assets user={currentUser} />}
+          {currentView === 'simulator' && <Simulator user={currentUser} />}
           {currentView === 'news' && <News onArticleClick={handleArticleClick} />}
           {currentView === 'news-detail' && selectedArticle && (
             <NewsDetail 
@@ -150,6 +189,81 @@ const App: React.FC = () => {
           className="fixed inset-0 bg-black/80 z-30 md:hidden backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
+      )}
+
+      {/* Feedback Modal */}
+      {isFeedbackOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-zblack-900 border border-zblack-800 w-full max-w-md rounded-3xl p-6 shadow-2xl relative">
+            <button 
+              onClick={() => setIsFeedbackOpen(false)} 
+              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 hover:bg-zblack-800 rounded-lg transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <MessageSquarePlus className="text-zgold-500" /> 
+                Enviar Feedback
+              </h3>
+              <p className="text-sm text-gray-400">
+                Ajude-nos a melhorar o ZiFÓLIO. Envie sugestões ou reporte problemas.
+              </p>
+            </div>
+
+            {feedbackSent ? (
+               <div className="py-10 flex flex-col items-center justify-center text-center animate-in zoom-in duration-300">
+                 <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mb-4">
+                   <Check size={32} />
+                 </div>
+                 <h4 className="text-lg font-bold text-white">Obrigado!</h4>
+                 <p className="text-gray-400">Seu feedback foi recebido com sucesso.</p>
+               </div>
+            ) : (
+              <form onSubmit={handleSubmitFeedback} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Tipo</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['suggestion', 'bug', 'other'].map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setFeedbackType(type as any)}
+                        className={`py-2 px-1 rounded-lg text-xs font-medium capitalize transition-all ${
+                          feedbackType === type 
+                            ? 'bg-zgold-500 text-black font-bold shadow-lg shadow-zgold-500/20' 
+                            : 'bg-zblack-950 text-gray-400 border border-zblack-800 hover:border-zgold-500/50'
+                        }`}
+                      >
+                        {type === 'suggestion' ? 'Sugestão' : type === 'bug' ? 'Problema' : 'Outro'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Mensagem</label>
+                  <textarea 
+                    value={feedbackMessage}
+                    onChange={(e) => setFeedbackMessage(e.target.value)}
+                    className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600 min-h-[120px] resize-none"
+                    placeholder="Escreva aqui o seu feedback..."
+                    required
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full bg-white hover:bg-gray-200 text-black font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 mt-2"
+                >
+                  <Send size={18} />
+                  <span>Enviar</span>
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
