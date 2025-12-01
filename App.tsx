@@ -161,8 +161,12 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-3 mb-8 p-4 bg-zblack-800/50 rounded-2xl border border-zblack-800">
-             <div className="w-10 h-10 rounded-full bg-zgold-500 text-black flex items-center justify-center font-bold text-lg border-2 border-zgold-400">
-               {currentUser.name.charAt(0)}
+             <div className="w-10 h-10 rounded-full bg-zgold-500 text-black flex items-center justify-center font-bold text-lg border-2 border-zgold-400 overflow-hidden shrink-0">
+               {currentUser.photoUrl ? (
+                 <img src={currentUser.photoUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+               ) : (
+                 currentUser.name.charAt(0)
+               )}
              </div>
              <div className="overflow-hidden">
                <p className="text-sm font-semibold text-white truncate">{currentUser.name}</p>
@@ -199,6 +203,11 @@ const App: React.FC = () => {
             <LogOut size={20} />
             <span>Sair</span>
           </button>
+
+          <div className="pt-6 px-2 text-xs text-gray-600 text-center leading-relaxed border-t border-zblack-800/50 mt-2">
+            <p>© {new Date().getFullYear()} ZiFÓLIO.</p>
+            <p>Todos os direitos reservados.</p>
+          </div>
         </div>
       </aside>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle, Key, Crown } from 'lucide-react';
+import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle, Key, Crown, Camera } from 'lucide-react';
 import { User } from '../types';
 
 interface ProfileProps {
@@ -58,6 +58,23 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
     setPasswordData({ newPassword: '', confirmPassword: '' });
     setPasswordError(null);
     setIsPasswordModalOpen(true);
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Limit file size to 500KB to avoid localStorage issues
+      if (file.size > 500000) {
+        setEditError('A imagem é muito grande. O limite é 500KB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempProfile({ ...tempProfile, photoUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -140,8 +157,12 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
       {/* User Header */}
       <div className="bg-zblack-900 border border-zblack-800 rounded-3xl p-8 mb-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-zgold-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-        <div className="w-32 h-32 rounded-full border-4 border-zgold-500 shadow-xl bg-zblack-800 flex items-center justify-center text-5xl font-bold text-white relative">
-          {user.name.charAt(0)}
+        <div className="w-32 h-32 rounded-full border-4 border-zgold-500 shadow-xl bg-zblack-800 flex items-center justify-center text-5xl font-bold text-white relative overflow-hidden shrink-0">
+          {user.photoUrl ? (
+             <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" />
+          ) : (
+             user.name.charAt(0)
+          )}
           {isPremium && (
              <div className="absolute -top-2 -right-2 bg-zgold-500 text-black p-2 rounded-full">
                <Crown size={18} />
@@ -336,6 +357,31 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
             )}
             
             <form onSubmit={handleSaveProfile} className="space-y-4">
+              
+              {/* Profile Photo Upload */}
+              <div className="flex flex-col items-center mb-6">
+                 <div className="w-24 h-24 rounded-full bg-zblack-800 border-2 border-zgold-500 flex items-center justify-center overflow-hidden mb-3 relative group">
+                   {tempProfile.photoUrl ? (
+                     <img src={tempProfile.photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                   ) : (
+                     <span className="text-3xl font-bold text-white">{tempProfile.name.charAt(0)}</span>
+                   )}
+                   <label htmlFor="photo-upload" className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                      <Camera size={24} className="text-white" />
+                   </label>
+                 </div>
+                 <input 
+                   id="photo-upload" 
+                   type="file" 
+                   accept="image/*" 
+                   className="hidden" 
+                   onChange={handlePhotoChange} 
+                 />
+                 <label htmlFor="photo-upload" className="text-sm text-zgold-500 cursor-pointer hover:underline">
+                   Alterar Foto
+                 </label>
+              </div>
+
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1 flex items-center gap-2">
                   <UserIcon size={12} /> Nome Completo

@@ -59,6 +59,7 @@ export interface User {
   email: string;
   password?: string; // Stored locally for MVP demo purposes only
   phone?: string;
+  photoUrl?: string; // Base64 string for profile picture
   plan?: 'Free' | 'Premium';
   planExpiryDate?: string; // ISO Date
   createdAt: string;
