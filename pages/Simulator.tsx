@@ -6,12 +6,13 @@ import { User } from '../types';
 
 interface SimulatorProps {
   user: User;
+  onOpenPremium: () => void;
 }
 
 type CompoundingFrequency = 12 | 4 | 1; // Monthly, Quarterly, Annually
 type CalculationMode = 'growth' | 'goal';
 
-const Simulator: React.FC<SimulatorProps> = ({ user }) => {
+const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
   // Modes & Configuration
   const [mode, setMode] = useState<CalculationMode>('growth');
   const [frequency, setFrequency] = useState<CompoundingFrequency>(12); // Default Monthly
@@ -306,7 +307,10 @@ const Simulator: React.FC<SimulatorProps> = ({ user }) => {
               
               <div className="z-10 w-full md:w-auto">
                 {!isPremium ? (
-                   <button className="w-full md:w-auto bg-zgold-500 hover:bg-zgold-400 text-black font-bold px-6 py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20 flex items-center justify-center gap-2">
+                   <button 
+                     onClick={onOpenPremium}
+                     className="w-full md:w-auto bg-zgold-500 hover:bg-zgold-400 text-black font-bold px-6 py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20 flex items-center justify-center gap-2"
+                   >
                      Tornar-se Premium <ArrowRight size={18} />
                    </button>
                 ) : (

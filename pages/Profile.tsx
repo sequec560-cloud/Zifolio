@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle, Key } from 'lucide-react';
+import { User as UserIcon, Shield, FileText, Bell, CreditCard, AlertTriangle, TrendingUp, Save, Check, X, Mail, Phone, AlertCircle, Key, Crown } from 'lucide-react';
 import { User } from '../types';
 
 interface ProfileProps {
   user: User;
   onUpdateUser: (updatedUser: User) => void;
+  onOpenPremium: () => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
+const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) => {
   // User Profile State
   const [tempProfile, setTempProfile] = useState<User>(user);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -130,6 +131,8 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
     </div>
   );
 
+  const isPremium = user.plan === 'Premium';
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <h2 className="text-3xl font-bold text-white mb-6">Meu Perfil</h2>
@@ -137,20 +140,40 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser }) => {
       {/* User Header */}
       <div className="bg-zblack-900 border border-zblack-800 rounded-3xl p-8 mb-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-zgold-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-        <div className="w-32 h-32 rounded-full border-4 border-zgold-500 shadow-xl bg-zblack-800 flex items-center justify-center text-5xl font-bold text-white">
+        <div className="w-32 h-32 rounded-full border-4 border-zgold-500 shadow-xl bg-zblack-800 flex items-center justify-center text-5xl font-bold text-white relative">
           {user.name.charAt(0)}
+          {isPremium && (
+             <div className="absolute -top-2 -right-2 bg-zgold-500 text-black p-2 rounded-full">
+               <Crown size={18} />
+             </div>
+          )}
         </div>
-        <div className="text-center md:text-left z-10">
-          <h3 className="text-2xl font-bold text-white">{user.name}</h3>
-          <p className="text-gray-400 mb-1">{user.email}</p>
-          <p className="text-gray-500 text-sm mb-4">{user.phone || 'Sem telefone'}</p>
-          <div className="flex gap-2 justify-center md:justify-start">
-            <span className="bg-zgold-500 text-black px-4 py-1 rounded-full text-sm font-bold shadow-lg shadow-zgold-500/20">
-              Plano {user.plan || 'Free'}
-            </span>
-            <span className="bg-zblack-950 border border-zblack-800 text-gray-300 px-4 py-1 rounded-full text-sm font-medium">
-              ID: #{user.id.substring(0, 6)}
-            </span>
+        <div className="text-center md:text-left z-10 w-full md:w-auto flex-1">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+              <h3 className="text-2xl font-bold text-white">{user.name}</h3>
+              <p className="text-gray-400 mb-1">{user.email}</p>
+              <p className="text-gray-500 text-sm mb-4">{user.phone || 'Sem telefone'}</p>
+              <div className="flex gap-2 justify-center md:justify-start">
+                <span className={`px-4 py-1 rounded-full text-sm font-bold shadow-lg ${isPremium ? 'bg-zgold-500 text-black' : 'bg-gray-700 text-white'}`}>
+                  Plano {user.plan || 'Free'}
+                </span>
+                <span className="bg-zblack-950 border border-zblack-800 text-gray-300 px-4 py-1 rounded-full text-sm font-medium">
+                  ID: #{user.id.substring(0, 6)}
+                </span>
+              </div>
+            </div>
+            
+            {/* Upgrade Button in Header if Free */}
+            {!isPremium && (
+              <button 
+                onClick={onOpenPremium}
+                className="bg-gradient-to-r from-zgold-500 to-zgold-600 hover:from-zgold-400 hover:to-zgold-500 text-black font-bold px-6 py-3 rounded-xl shadow-lg shadow-zgold-500/20 transition-transform active:scale-95 flex items-center gap-2"
+              >
+                <Crown size={18} />
+                Tornar-se Premium
+              </button>
+            )}
           </div>
         </div>
       </div>

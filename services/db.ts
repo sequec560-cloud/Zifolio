@@ -89,6 +89,28 @@ export const db = {
     }
   },
 
+  upgradeToPremium: (userId: string): User => {
+    const users = db.getUsers();
+    const index = users.findIndex(u => u.id === userId);
+
+    if (index === -1) {
+      throw new Error('Usuário não encontrado.');
+    }
+
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+
+    const updatedUser = {
+      ...users[index],
+      plan: 'Premium' as const,
+      planExpiryDate: nextYear.toISOString().split('T')[0] // YYYY-MM-DD
+    };
+
+    users[index] = updatedUser;
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    return updatedUser;
+  },
+
   // --- ASSETS ---
 
   getAllAssets: (): Asset[] => {

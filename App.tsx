@@ -10,7 +10,12 @@ import {
   Newspaper,
   MessageSquarePlus,
   Send,
-  Check
+  Check,
+  Crown,
+  Star,
+  Zap,
+  ShieldCheck,
+  ArrowRight
 } from 'lucide-react';
 import { ViewState, NewsArticle, User } from './types';
 import Login from './pages/Login';
@@ -34,6 +39,11 @@ const App: React.FC = () => {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
 
+  // Premium Modal State
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
+  const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false);
+
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     setCurrentView('dashboard');
@@ -53,6 +63,30 @@ const App: React.FC = () => {
   const handleUpdateUser = (updatedUser: User) => {
     db.updateUser(updatedUser);
     setCurrentUser(updatedUser);
+  };
+
+  const handleUpgradeToPremium = () => {
+    if (!currentUser) return;
+    setIsProcessingUpgrade(true);
+
+    // Simulate API delay
+    setTimeout(() => {
+      try {
+        const upgradedUser = db.upgradeToPremium(currentUser.id);
+        setCurrentUser(upgradedUser);
+        setUpgradeSuccess(true);
+        setIsProcessingUpgrade(false);
+        
+        // Close modal after success animation
+        setTimeout(() => {
+          setIsPremiumModalOpen(false);
+          setUpgradeSuccess(false);
+        }, 2000);
+      } catch (error) {
+        console.error("Upgrade failed", error);
+        setIsProcessingUpgrade(false);
+      }
+    }, 1500);
   };
 
   const handleSubmitFeedback = (e: React.FormEvent) => {
@@ -132,7 +166,10 @@ const App: React.FC = () => {
              </div>
              <div className="overflow-hidden">
                <p className="text-sm font-semibold text-white truncate">{currentUser.name}</p>
-               <p className="text-xs text-gray-500 truncate">Investidor {currentUser.plan || 'Free'}</p>
+               <div className="flex items-center gap-1">
+                 <p className="text-xs text-gray-500 truncate">Investidor {currentUser.plan || 'Free'}</p>
+                 {currentUser.plan === 'Premium' && <Crown size={10} className="text-zgold-500" />}
+               </div>
              </div>
           </div>
 
@@ -170,7 +207,12 @@ const App: React.FC = () => {
         <div className="max-w-5xl mx-auto pb-20 md:pb-0">
           {currentView === 'dashboard' && <Dashboard user={currentUser} />}
           {currentView === 'assets' && <Assets user={currentUser} />}
-          {currentView === 'simulator' && <Simulator user={currentUser} />}
+          {currentView === 'simulator' && (
+            <Simulator 
+              user={currentUser} 
+              onOpenPremium={() => setIsPremiumModalOpen(true)} 
+            />
+          )}
           {currentView === 'news' && <News onArticleClick={handleArticleClick} />}
           {currentView === 'news-detail' && selectedArticle && (
             <NewsDetail 
@@ -179,7 +221,13 @@ const App: React.FC = () => {
               onArticleClick={handleArticleClick}
             />
           )}
-          {currentView === 'profile' && <Profile user={currentUser} onUpdateUser={handleUpdateUser} />}
+          {currentView === 'profile' && (
+            <Profile 
+              user={currentUser} 
+              onUpdateUser={handleUpdateUser} 
+              onOpenPremium={() => setIsPremiumModalOpen(true)}
+            />
+          )}
         </div>
       </main>
 
@@ -265,6 +313,110 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* PREMIUM UPGRADE MODAL */}
+      {isPremiumModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+           {/* Confetti effect background if success */}
+           {upgradeSuccess && <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>}
+
+           <div className="bg-gradient-to-br from-zblack-900 to-zblack-950 border border-zgold-500/30 w-full max-w-lg rounded-3xl p-0 shadow-2xl relative overflow-hidden flex flex-col">
+              
+              {/* Decorative Gold Glow */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-zgold-500 to-transparent"></div>
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-zgold-500/10 rounded-full blur-3xl"></div>
+
+              <div className="p-8 relative z-10">
+                <button 
+                  onClick={() => setIsPremiumModalOpen(false)} 
+                  className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 hover:bg-zblack-800 rounded-lg transition-colors"
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-zgold-400 to-zgold-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-zgold-500/30 transform rotate-3">
+                    <Crown size={32} className="text-black" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-white mb-2">ZiFÓLIO <span className="text-zgold-500">Premium</span></h2>
+                  <p className="text-gray-400">Desbloqueie todo o potencial da sua carteira.</p>
+                </div>
+
+                {upgradeSuccess ? (
+                  <div className="py-12 text-center animate-in zoom-in duration-500">
+                     <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                       <Check size={40} />
+                     </div>
+                     <h3 className="text-2xl font-bold text-white mb-2">Bem-vindo ao Premium!</h3>
+                     <p className="text-gray-400">A sua conta foi atualizada com sucesso.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-4 mb-8">
+                      <div className="flex items-center gap-4 bg-zblack-800/50 p-3 rounded-xl border border-zblack-800">
+                        <div className="p-2 bg-zgold-500/10 text-zgold-500 rounded-lg">
+                          <Zap size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white text-sm">Simulador Avançado</h4>
+                          <p className="text-xs text-gray-500">Meta Alvo e Projeções detalhadas.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 bg-zblack-800/50 p-3 rounded-xl border border-zblack-800">
+                         <div className="p-2 bg-zgold-500/10 text-zgold-500 rounded-lg">
+                          <Star size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white text-sm">Ativos Ilimitados</h4>
+                          <p className="text-xs text-gray-500">Gerencie carteiras complexas sem limites.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 bg-zblack-800/50 p-3 rounded-xl border border-zblack-800">
+                         <div className="p-2 bg-zgold-500/10 text-zgold-500 rounded-lg">
+                          <ShieldCheck size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white text-sm">Alertas Prioritários</h4>
+                          <p className="text-xs text-gray-500">Notificações instantâneas de mercado.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-zblack-950 rounded-xl p-4 mb-6 border border-zblack-800 flex justify-between items-center">
+                       <div>
+                         <p className="text-gray-400 text-xs">Preço Anual</p>
+                         <p className="text-white font-bold text-lg">50.000 Kz</p>
+                       </div>
+                       <span className="bg-zgold-500/20 text-zgold-500 text-xs font-bold px-2 py-1 rounded">
+                         -20% OFF
+                       </span>
+                    </div>
+
+                    <button 
+                      onClick={handleUpgradeToPremium}
+                      disabled={isProcessingUpgrade}
+                      className="w-full bg-gradient-to-r from-zgold-500 to-zgold-600 hover:from-zgold-400 hover:to-zgold-500 text-black font-bold py-4 rounded-xl transition-all shadow-lg shadow-zgold-500/20 flex items-center justify-center gap-2 transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {isProcessingUpgrade ? (
+                        <>Processing...</>
+                      ) : (
+                        <>
+                           Tornar-se Premium Agora <ArrowRight size={18} />
+                        </>
+                      )}
+                    </button>
+                    <p className="text-center text-[10px] text-gray-500 mt-4">
+                      Pagamento seguro (Simulado). Cancele a qualquer momento.
+                    </p>
+                  </>
+                )}
+              </div>
+           </div>
+        </div>
+      )}
+
     </div>
   );
 };
