@@ -28,11 +28,68 @@ import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
 import { db } from './services/db';
 
+const SplashScreen = () => (
+  <div className="fixed inset-0 bg-[#050505] flex flex-col items-center justify-center z-[100]">
+    <style>{`
+      @keyframes logo-reveal {
+        0% { opacity: 0; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.05); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      @keyframes text-slide {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes shimmer {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
+      }
+      .logo-anim { animation: logo-reveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+      .text-anim { animation: text-slide 0.8s ease-out 0.5s forwards; opacity: 0; }
+      .gold-shimmer {
+        background: linear-gradient(90deg, #f09805 0%, #fff 50%, #f09805 100%);
+        background-size: 200% auto;
+        color: transparent;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shimmer 3s linear infinite;
+      }
+      .loader-bar {
+        animation: loading 2s ease-in-out infinite;
+      }
+      @keyframes loading {
+        0% { transform: translateX(-100%); }
+        50% { transform: translateX(0); }
+        100% { transform: translateX(100%); }
+      }
+    `}</style>
+    
+    <div className="relative logo-anim">
+      <div className="absolute -inset-20 bg-zgold-500/10 rounded-full blur-[80px] animate-pulse"></div>
+      <h1 className="relative text-6xl md:text-8xl font-bold tracking-tighter text-white select-none">
+        Zi<span className="gold-shimmer">FÓLIO</span>
+      </h1>
+    </div>
+
+    <div className="mt-8 text-anim flex flex-col items-center gap-4">
+      <p className="text-gray-500 text-xs md:text-sm tracking-[0.4em] uppercase font-medium">
+        Gestão de Carteiras
+      </p>
+      <div className="w-24 h-0.5 bg-zblack-800 rounded-full overflow-hidden">
+        <div className="w-full h-full bg-zgold-500 loader-bar"></div>
+      </div>
+    </div>
+  </div>
+);
+
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  // Splash Screen State
+  const [showSplash, setShowSplash] = useState(true);
 
   // Feedback State
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -45,19 +102,31 @@ const App: React.FC = () => {
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
   const [upgradeSuccess, setUpgradeSuccess] = useState(false);
 
-  // Restore user from session if available (simplified for MVP)
+  // Initialization Effect
   useEffect(() => {
-    // In a real app, we'd check session token. Here we rely on Login state.
-    // If we wanted persistence on refresh without router state, we'd store userId in sessionStorage.
+    // 1. Attempt to restore session
+    const storedSession = db.getSession();
+    if (storedSession) {
+      setCurrentUser(storedSession);
+    }
+
+    // 2. Splash screen timer
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2800); // 2.8 seconds splash duration
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
+    db.saveSession(user); // Persist login
     navigate('/dashboard');
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    db.clearSession(); // Clear persistence
     setIsMobileMenuOpen(false);
     navigate('/login');
   };
@@ -65,6 +134,7 @@ const App: React.FC = () => {
   const handleUpdateUser = (updatedUser: User) => {
     db.updateUser(updatedUser);
     setCurrentUser(updatedUser);
+    // db.updateUser already updates the session if needed, but explicit is fine too
   };
 
   const handleUpgradeToPremium = () => {
@@ -74,7 +144,7 @@ const App: React.FC = () => {
     setTimeout(() => {
       try {
         const upgradedUser = db.upgradeToPremium(currentUser.id);
-        setCurrentUser(upgradedUser);
+        setCurrentUser(upgradedUser); // State update
         setUpgradeSuccess(true);
         setIsProcessingUpgrade(false);
         
@@ -128,12 +198,12 @@ const App: React.FC = () => {
     );
   };
 
-  // Auth Guard
-  if (!currentUser && !location.pathname.startsWith('/login')) {
-     return <Login onLogin={handleLogin} />;
+  // 1. Show Splash Screen first
+  if (showSplash) {
+    return <SplashScreen />;
   }
 
-  // Pure Login Route check
+  // 2. Auth Guard
   if (!currentUser) {
       return (
         <Routes>
@@ -144,7 +214,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-zblack-950 text-gray-200 flex flex-col md:flex-row font-sans selection:bg-zgold-500 selection:text-black">
+    <div className="min-h-screen bg-zblack-950 text-gray-200 flex flex-col md:flex-row font-sans selection:bg-zgold-500 selection:text-black animate-in fade-in duration-500">
       
       {/* Mobile Header */}
       <div className="md:hidden flex justify-between items-center p-6 bg-zblack-950 sticky top-0 z-50 border-b border-zblack-800">

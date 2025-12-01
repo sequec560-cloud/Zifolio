@@ -6,6 +6,7 @@ const FEEDBACK_KEY = 'zifolio_feedback_db';
 const ASSETS_KEY = 'zifolio_assets_db';
 const TASKS_KEY = 'zifolio_tasks_db';
 const TRANSACTIONS_KEY = 'zifolio_transactions_db';
+const SESSION_KEY = 'zifolio_current_session';
 
 // Helper to safely parse JSON
 const safeJsonParse = <T>(key: string, fallback: T): T => {
@@ -18,7 +19,34 @@ const safeJsonParse = <T>(key: string, fallback: T): T => {
   }
 };
 
+// Helper to safely set JSON
+const safeJsonSet = (key: string, value: any): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Error saving ${key} to localStorage:`, error);
+    // Could dispatch a UI event here if needed
+  }
+};
+
 export const db = {
+  // --- SESSION MANAGEMENT ---
+  saveSession: (user: User): void => {
+    safeJsonSet(SESSION_KEY, user);
+  },
+
+  getSession: (): User | null => {
+    return safeJsonParse<User | null>(SESSION_KEY, null);
+  },
+
+  clearSession: (): void => {
+    try {
+      localStorage.removeItem(SESSION_KEY);
+    } catch (e) {
+      console.error("Error clearing session", e);
+    }
+  },
+
   // --- USERS ---
 
   getUsers: (): User[] => {
@@ -45,7 +73,7 @@ export const db = {
     };
 
     users.push(newUser);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    safeJsonSet(USERS_KEY, users);
     return newUser;
   },
 
@@ -62,7 +90,7 @@ export const db = {
         // Ensure mock user is in DB so asset saving works later
         if (!users.some(u => u.id === mock.id)) {
           users.push(mock);
-          localStorage.setItem(USERS_KEY, JSON.stringify(users));
+          safeJsonSet(USERS_KEY, users);
         }
       }
     }
@@ -99,7 +127,7 @@ export const db = {
     };
 
     users.push(newUser);
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    safeJsonSet(USERS_KEY, users);
     return newUser;
   },
 
@@ -117,7 +145,7 @@ export const db = {
     }
 
     users[index].password = newPassword;
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    safeJsonSet(USERS_KEY, users);
   },
 
   updateUser: (updatedUser: User): void => {
@@ -126,7 +154,12 @@ export const db = {
     
     if (index !== -1) {
       users[index] = updatedUser;
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      safeJsonSet(USERS_KEY, users);
+      // Also update session if it matches
+      const currentSession = db.getSession();
+      if (currentSession && currentSession.id === updatedUser.id) {
+        db.saveSession(updatedUser);
+      }
     }
   },
 
@@ -148,7 +181,11 @@ export const db = {
     };
 
     users[index] = updatedUser;
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    safeJsonSet(USERS_KEY, users);
+    
+    // Update session immediately
+    db.saveSession(updatedUser);
+    
     return updatedUser;
   },
 
@@ -161,9 +198,9 @@ export const db = {
     // Seed mock transactions if user is mock user and list is empty
     if (userId === 'mock-user-1' && userTransactions.length === 0) {
        const seeded = MOCK_TRANSACTIONS.map(t => ({...t, userId: 'mock-user-1'}));
-       db.addTransaction(seeded[0]); // Add individually to trigger save
-       db.addTransaction(seeded[1]);
-       db.addTransaction(seeded[2]);
+       // Add individually to trigger save, but using direct manipulation for efficiency here
+       const toSave = [...allTransactions, ...seeded];
+       safeJsonSet(TRANSACTIONS_KEY, toSave);
        return seeded;
     }
     
@@ -179,7 +216,7 @@ export const db = {
     };
 
     allTransactions.push(newTx);
-    localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(allTransactions));
+    safeJsonSet(TRANSACTIONS_KEY, allTransactions);
     return newTx;
   },
 
@@ -196,7 +233,7 @@ export const db = {
     // Seed data for the Mock User if empty
     if (userId === 'mock-user-1' && userAssets.length === 0) {
       const seededAssets = MOCK_ASSETS.map(a => ({ ...a, userId: 'mock-user-1' }));
-      localStorage.setItem(ASSETS_KEY, JSON.stringify([...allAssets, ...seededAssets]));
+      safeJsonSet(ASSETS_KEY, [...allAssets, ...seededAssets]);
       return seededAssets;
     }
 
@@ -206,7 +243,7 @@ export const db = {
   saveAsset: (asset: Asset): void => {
     const allAssets = db.getAllAssets();
     allAssets.push(asset);
-    localStorage.setItem(ASSETS_KEY, JSON.stringify(allAssets));
+    safeJsonSet(ASSETS_KEY, allAssets);
 
     // GENERATE TRANSACTION: BUY
     db.addTransaction({
@@ -225,7 +262,7 @@ export const db = {
     if (index !== -1) {
       const oldAsset = allAssets[index];
       allAssets[index] = updatedAsset;
-      localStorage.setItem(ASSETS_KEY, JSON.stringify(allAssets));
+      safeJsonSet(ASSETS_KEY, allAssets);
 
       // GENERATE TRANSACTION: BUY OR SELL based on difference
       const diff = updatedAsset.investedAmount - oldAsset.investedAmount;
@@ -254,7 +291,7 @@ export const db = {
     const asset = allAssets.find(a => a.id === assetId);
     
     allAssets = allAssets.filter(a => a.id !== assetId);
-    localStorage.setItem(ASSETS_KEY, JSON.stringify(allAssets));
+    safeJsonSet(ASSETS_KEY, allAssets);
 
     // GENERATE TRANSACTION: SELL (Liquidation)
     if (asset) {
@@ -286,7 +323,7 @@ export const db = {
     };
     
     allTasks.push(newTask);
-    localStorage.setItem(TASKS_KEY, JSON.stringify(allTasks));
+    safeJsonSet(TASKS_KEY, allTasks);
     return newTask;
   },
 
@@ -296,7 +333,7 @@ export const db = {
     
     if (index !== -1) {
       allTasks[index].completed = !allTasks[index].completed;
-      localStorage.setItem(TASKS_KEY, JSON.stringify(allTasks));
+      safeJsonSet(TASKS_KEY, allTasks);
     }
     return allTasks;
   },
@@ -304,7 +341,7 @@ export const db = {
   deleteTask: (taskId: string): void => {
     let allTasks = safeJsonParse<Task[]>(TASKS_KEY, []);
     allTasks = allTasks.filter(t => t.id !== taskId);
-    localStorage.setItem(TASKS_KEY, JSON.stringify(allTasks));
+    safeJsonSet(TASKS_KEY, allTasks);
   },
 
   // --- FEEDBACK ---
@@ -317,7 +354,7 @@ export const db = {
       createdAt: new Date().toISOString()
     };
     existingFeedback.push(newFeedback);
-    localStorage.setItem(FEEDBACK_KEY, JSON.stringify(existingFeedback));
+    safeJsonSet(FEEDBACK_KEY, existingFeedback);
   },
 
   getMockUser: (): User => {
