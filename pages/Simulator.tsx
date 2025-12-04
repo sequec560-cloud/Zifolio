@@ -146,18 +146,18 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-            <h2 className="text-3xl font-bold text-white">Simulador de Investimento</h2>
-            <p className="text-gray-400 mt-2">Planeje o seu futuro financeiro com precisão.</p>
+            <h2 className="text-3xl font-bold text-slate-900">Simulador de Investimento</h2>
+            <p className="text-slate-500 mt-2">Planeje o seu futuro financeiro com precisão.</p>
         </div>
         
         {/* Mode Toggle */}
-        <div className="bg-zblack-900 border border-zblack-800 p-1 rounded-xl flex">
+        <div className="bg-white border border-slate-200 p-1 rounded-xl flex shadow-sm">
             <button
                 onClick={() => handleModeChange('growth')}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                     mode === 'growth' 
-                    ? 'bg-zgold-500 text-black shadow-lg' 
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-zblue-600 text-white shadow-md' 
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
             >
                 Simular Rendimento
@@ -166,8 +166,8 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                 onClick={() => handleModeChange('goal')}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
                     mode === 'goal' 
-                    ? 'bg-zgold-500 text-black shadow-lg' 
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-zblue-600 text-white shadow-md' 
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
             >
                 {!isPremium && <Lock size={12} />}
@@ -179,18 +179,18 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Controls Column */}
-        <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl h-fit">
-          <h3 className="font-bold text-white mb-6 flex items-center gap-2">
-             <span className="w-1 h-6 bg-zgold-500 rounded-full"></span>
+        <div className="bg-white border border-slate-200 p-6 rounded-3xl h-fit shadow-sm">
+          <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+             <span className="w-1 h-6 bg-zblue-500 rounded-full"></span>
              Configuração
           </h3>
 
           <div className="space-y-8">
             {/* Amount Input */}
             <div>
-              <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
+              <label className="flex justify-between text-sm font-medium text-slate-500 mb-2">
                 <span>Investimento Inicial</span>
-                <span className="text-zgold-500 font-mono">{formatKz(amount)}</span>
+                <span className="text-zblue-600 font-mono font-bold">{formatKz(amount)}</span>
               </label>
               <input 
                 type="range" 
@@ -199,15 +199,15 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                 step="100000"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full h-2 bg-zblack-800 rounded-lg appearance-none cursor-pointer accent-zgold-500"
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-zblue-500"
               />
             </div>
 
             {/* Rate Input */}
             <div>
-              <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
+              <label className="flex justify-between text-sm font-medium text-slate-500 mb-2">
                 <span>Taxa Anual (%)</span>
-                <span className="text-zgold-500 font-mono">{rate}%</span>
+                <span className="text-zblue-600 font-mono font-bold">{rate}%</span>
               </label>
               <input 
                 type="range" 
@@ -216,9 +216,9 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                 step="0.5"
                 value={rate}
                 onChange={(e) => setRate(Number(e.target.value))}
-                className="w-full h-2 bg-zblack-800 rounded-lg appearance-none cursor-pointer accent-zgold-500"
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-zblue-500"
               />
-              <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+              <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
                 <Info size={12} />
                 Média atual OTs: 16% - 19%
               </p>
@@ -226,7 +226,7 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
 
             {/* Compounding Frequency */}
             <div>
-                 <label className="block text-sm font-medium text-gray-400 mb-3">Capitalização dos Juros</label>
+                 <label className="block text-sm font-medium text-slate-500 mb-3">Capitalização dos Juros</label>
                  <div className="grid grid-cols-3 gap-2">
                     {frequencies.map((freq) => (
                         <button
@@ -234,8 +234,8 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                             onClick={() => handleFrequencyChange(freq.value, !!freq.premium)}
                             className={`py-2 px-1 rounded-lg text-xs font-medium border transition-colors relative ${
                                 frequency === freq.value
-                                ? 'bg-zgold-500/20 text-zgold-500 border-zgold-500'
-                                : 'bg-zblack-950 text-gray-400 border-zblack-800 hover:border-gray-600'
+                                ? 'bg-zblue-50 text-zblue-600 border-zblue-200'
+                                : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-slate-300'
                             }`}
                         >
                             <span className="flex items-center justify-center gap-1">
@@ -247,13 +247,13 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                  </div>
             </div>
 
-            <div className="border-t border-zblack-800 pt-6">
+            <div className="border-t border-slate-100 pt-6">
                 {mode === 'growth' ? (
                     /* Years Input (Growth Mode) */
                     <div>
-                        <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
+                        <label className="flex justify-between text-sm font-medium text-slate-500 mb-2">
                             <span>Prazo do Investimento</span>
-                            <span className="text-zgold-500 font-mono">{years} Anos</span>
+                            <span className="text-zblue-600 font-mono font-bold">{years} Anos</span>
                         </label>
                         <div className="flex gap-2 mt-2">
                             {[1, 2, 3, 5, 10].map(y => (
@@ -262,8 +262,8 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                                 onClick={() => setYears(y)}
                                 className={`flex-1 py-2 rounded-lg text-sm transition-colors border ${
                                 years === y 
-                                    ? 'bg-white text-black font-bold border-white' 
-                                    : 'bg-zblack-950 text-gray-400 hover:text-white border-zblack-800'
+                                    ? 'bg-zblue-600 text-white font-bold border-zblue-600' 
+                                    : 'bg-slate-50 text-slate-500 hover:text-slate-800 border-slate-200'
                                 }`}
                             >
                                 {y}
@@ -274,9 +274,9 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                 ) : (
                     /* Target Amount Input (Goal Mode) */
                     <div>
-                        <label className="flex justify-between text-sm font-medium text-gray-400 mb-2">
+                        <label className="flex justify-between text-sm font-medium text-slate-500 mb-2">
                             <span className="flex items-center gap-2"><Target size={14}/> Objetivo Financeiro</span>
-                            <span className="text-zgold-500 font-mono">{formatKz(targetAmount)}</span>
+                            <span className="text-zblue-600 font-mono font-bold">{formatKz(targetAmount)}</span>
                         </label>
                          <input 
                             type="range" 
@@ -285,9 +285,9 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                             step="100000"
                             value={targetAmount}
                             onChange={(e) => setTargetAmount(Number(e.target.value))}
-                            className="w-full h-2 bg-zblack-800 rounded-lg appearance-none cursor-pointer accent-zgold-500"
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-zblue-500"
                         />
-                        <div className="flex justify-between text-xs text-gray-500 mt-2">
+                        <div className="flex justify-between text-xs text-slate-400 mt-2">
                             <span>Min: {formatKz(amount)}</span>
                             <span>Max: {formatKz(amount * 10)}</span>
                         </div>
@@ -301,25 +301,25 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
         <div className="lg:col-span-2 space-y-6">
            
            {/* Account Status Card */}
-           <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-zgold-500/5 to-transparent pointer-events-none" />
+           <div className="bg-white border border-slate-200 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden shadow-sm">
+              <div className="absolute inset-0 bg-gradient-to-r from-zblue-50 to-transparent pointer-events-none" />
               <div className="flex items-center gap-4 z-10">
-                <div className={`p-4 rounded-full ${isPremium ? 'bg-zgold-500 text-black' : 'bg-zblack-800 text-gray-400'}`}>
+                <div className={`p-4 rounded-full ${isPremium ? 'bg-zblue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
                   <Crown size={24} />
                 </div>
                 <div>
-                  <p className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Estado da Conta</p>
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <p className="text-slate-500 text-xs uppercase tracking-wider font-semibold">Estado da Conta</p>
+                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     {isPremium ? 'Membro Premium' : 'Plano Gratuito'}
-                    {isPremium && <span className="text-xs bg-zgold-500 text-black px-2 py-0.5 rounded-full font-bold">PRO</span>}
+                    {isPremium && <span className="text-xs bg-zblue-600 text-white px-2 py-0.5 rounded-full font-bold">PRO</span>}
                   </h3>
                   {isPremium && user.planExpiryDate && (
-                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                    <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
                       <Calendar size={12} /> Expira em: {user.planExpiryDate}
                     </p>
                   )}
                   {isPremium && !user.planExpiryDate && (
-                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                    <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
                       <Calendar size={12} /> Expira em: 2025-12-31 (Demo)
                     </p>
                   )}
@@ -330,12 +330,12 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                 {!isPremium ? (
                    <button 
                      onClick={onOpenPremium}
-                     className="w-full md:w-auto bg-zgold-500 hover:bg-zgold-400 text-black font-bold px-6 py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20 flex items-center justify-center gap-2"
+                     className="w-full md:w-auto bg-zblue-600 hover:bg-zblue-500 text-white font-bold px-6 py-3 rounded-xl transition-colors shadow-lg shadow-zblue-500/20 flex items-center justify-center gap-2"
                    >
                      Tornar-se Premium <ArrowRight size={18} />
                    </button>
                 ) : (
-                  <div className="px-4 py-2 border border-zgold-500/30 bg-zgold-500/10 rounded-xl text-zgold-500 text-sm font-medium text-center">
+                  <div className="px-4 py-2 border border-zblue-200 bg-zblue-50 rounded-xl text-zblue-600 text-sm font-medium text-center">
                      Benefícios Ativos
                   </div>
                 )}
@@ -343,13 +343,13 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
            </div>
 
            {/* Chart */}
-           <div className="bg-zblack-900 border border-zblack-800 p-6 rounded-3xl">
-              <h3 className="font-bold text-white mb-4 flex justify-between items-center">
+           <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
+              <h3 className="font-bold text-slate-900 mb-4 flex justify-between items-center">
                   <span>
                       {mode === 'growth' ? 'Projeção de Crescimento' : 'Trajetória até o Objetivo'}
                   </span>
                   {mode === 'goal' && timeResult && (
-                      <span className="text-sm font-normal text-zgold-500 bg-zgold-500/10 px-3 py-1 rounded-full border border-zgold-500/20">
+                      <span className="text-sm font-normal text-zblue-600 bg-zblue-50 px-3 py-1 rounded-full border border-zblue-100">
                           {timeResult.years} anos e {timeResult.months} meses
                       </span>
                   )}
@@ -359,21 +359,21 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                   <AreaChart data={projection}>
                     <defs>
                       <linearGradient id="colorSimulator" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f09805" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#f09805" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#6384ff" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#6384ff" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <Tooltip 
-                      contentStyle={{ backgroundColor: '#141414', borderColor: '#333', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
+                      contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#1e293b', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                       formatter={(value: number) => [formatKz(value), "Valor"]}
                       labelFormatter={(label) => `Mês ${label}`}
                     />
-                    <XAxis dataKey="month" stroke="#333" tick={{fontSize: 12}} minTickGap={30} />
+                    <XAxis dataKey="month" stroke="#cbd5e1" tick={{fontSize: 12}} minTickGap={30} />
                     <YAxis hide domain={['dataMin', 'auto']} />
                     <Area 
                       type="monotone" 
                       dataKey="value" 
-                      stroke="#f09805" 
+                      stroke="#6384ff" 
                       strokeWidth={3} 
                       fillOpacity={1} 
                       fill="url(#colorSimulator)" 
@@ -386,26 +386,26 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
 
            {/* Results Cards */}
            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors">
-                <p className="text-gray-400 text-xs uppercase tracking-wide flex items-center gap-2">
+              <div className="bg-white border border-slate-200 p-5 rounded-3xl hover:border-zblue-200 transition-colors shadow-sm">
+                <p className="text-slate-500 text-xs uppercase tracking-wide flex items-center gap-2">
                     <TrendingUp size={14}/> Total Investido
                 </p>
-                <p className="text-2xl font-bold text-white mt-1 font-mono tracking-tight">{formatKz(amount)}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1 font-mono tracking-tight">{formatKz(amount)}</p>
               </div>
               
-              <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors">
-                <p className="text-gray-400 text-xs uppercase tracking-wide flex items-center gap-2">
-                    {mode === 'growth' ? <TrendingUp size={14} className="text-green-500"/> : <Clock size={14} className="text-green-500"/>}
+              <div className="bg-white border border-slate-200 p-5 rounded-3xl hover:border-zblue-200 transition-colors shadow-sm">
+                <p className="text-slate-500 text-xs uppercase tracking-wide flex items-center gap-2">
+                    {mode === 'growth' ? <TrendingUp size={14} className="text-green-600"/> : <Clock size={14} className="text-green-600"/>}
                     {mode === 'growth' ? 'Lucro Estimado' : 'Tempo Estimado'}
                 </p>
                 {mode === 'growth' ? (
-                     <p className="text-2xl font-bold text-green-500 mt-1 font-mono tracking-tight">+{formatKz(totalReturns)}</p>
+                     <p className="text-2xl font-bold text-green-600 mt-1 font-mono tracking-tight">+{formatKz(totalReturns)}</p>
                 ) : (
                     <div className="mt-1">
-                        <p className="text-2xl font-bold text-green-500 font-mono leading-none">
-                            {timeResult ? timeResult.years : 0} <span className="text-sm text-gray-500">anos</span>
+                        <p className="text-2xl font-bold text-green-600 font-mono leading-none">
+                            {timeResult ? timeResult.years : 0} <span className="text-sm text-slate-500">anos</span>
                         </p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-slate-400">
                              {timeResult ? timeResult.months : 0} meses
                         </p>
                     </div>
@@ -413,12 +413,12 @@ const Simulator: React.FC<SimulatorProps> = ({ user, onOpenPremium }) => {
                
               </div>
 
-              <div className="bg-zblack-900 border border-zblack-800 p-5 rounded-3xl hover:border-zgold-500/30 transition-colors relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-20 h-20 bg-zgold-500/10 rounded-full blur-xl"></div>
-                <p className="text-zgold-500 text-xs uppercase tracking-wide font-bold flex items-center gap-2">
+              <div className="bg-white border border-slate-200 p-5 rounded-3xl hover:border-zblue-200 transition-colors relative overflow-hidden shadow-sm">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-zblue-500/10 rounded-full blur-xl"></div>
+                <p className="text-zblue-600 text-xs uppercase tracking-wide font-bold flex items-center gap-2">
                     <Target size={14}/> {mode === 'growth' ? 'Valor Final' : 'Meta Alvo'}
                 </p>
-                <p className="text-2xl font-bold text-white mt-1 font-mono tracking-tight">{formatKz(finalValue)}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1 font-mono tracking-tight">{formatKz(finalValue)}</p>
               </div>
            </div>
         </div>

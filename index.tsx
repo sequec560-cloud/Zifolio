@@ -12,11 +12,12 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false, error: null };
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState;
 
   constructor(props: ErrorBoundaryProps) {
     super(props);
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -32,8 +33,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       return (
         <div style={{ 
           padding: '40px', 
-          color: '#e5e5e5', 
-          backgroundColor: '#050505', 
+          color: '#1e293b', 
+          backgroundColor: '#f9f9fd', 
           minHeight: '100vh', 
           fontFamily: 'sans-serif',
           display: 'flex',
@@ -42,22 +43,25 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           justifyContent: 'center',
           textAlign: 'center'
         }}>
-          <h1 style={{ fontSize: '24px', marginBottom: '16px', color: '#f09805' }}>Something went wrong</h1>
-          <p style={{ maxWidth: '600px', color: '#999', marginBottom: '24px' }}>
-            The application encountered an unexpected error. Please try reloading.
+          <h1 style={{ fontSize: '32px', marginBottom: '16px', color: '#6384ff', fontWeight: 'bold' }}>Algo deu errado</h1>
+          <p style={{ maxWidth: '500px', color: '#64748b', marginBottom: '32px', lineHeight: '1.6' }}>
+            A aplicação encontrou um erro inesperado. Por favor, tente recarregar a página.
           </p>
           <div style={{ 
-            backgroundColor: '#111', 
-            padding: '20px', 
-            borderRadius: '8px', 
-            marginBottom: '24px', 
-            maxWidth: '80%', 
+            backgroundColor: '#fff', 
+            padding: '24px', 
+            borderRadius: '16px', 
+            marginBottom: '32px', 
+            maxWidth: '90%', 
+            width: '600px',
             overflow: 'auto',
-            border: '1px solid #333',
-            color: '#f87171',
-            textAlign: 'left'
+            border: '1px solid #e2e8f0',
+            color: '#ef4444',
+            textAlign: 'left',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
           }}>
-            <code style={{ fontSize: '12px' }}>{this.state.error?.message || 'Unknown error'}</code>
+            <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#94a3b8', textTransform: 'uppercase' }}>Detalhes do Erro:</p>
+            <code style={{ fontSize: '14px', fontFamily: 'monospace' }}>{this.state.error?.message || 'Erro desconhecido'}</code>
           </div>
           <button 
             onClick={() => {
@@ -65,16 +69,18 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               window.location.reload();
             }} 
             style={{ 
-              padding: '12px 24px', 
-              backgroundColor: '#f09805', 
-              color: '#000', 
+              padding: '14px 32px', 
+              backgroundColor: '#6384ff', 
+              color: '#ffffff', 
               border: 'none', 
-              borderRadius: '8px', 
+              borderRadius: '12px', 
               fontWeight: 'bold',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontSize: '16px',
+              boxShadow: '0 10px 15px -3px rgba(99, 132, 255, 0.2)'
             }}
           >
-            Clear Data & Reload
+            Limpar Dados & Recarregar
           </button>
         </div>
       );

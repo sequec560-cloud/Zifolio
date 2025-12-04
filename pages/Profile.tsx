@@ -142,41 +142,41 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
   const SettingItem = ({ icon: Icon, title, desc, onClick, premiumOnly }: { icon: any, title: string, desc: string, onClick?: () => void, premiumOnly?: boolean }) => (
     <div 
       onClick={premiumOnly && !isPremium ? onOpenPremium : onClick}
-      className={`flex items-center justify-between p-4 bg-zblack-950 rounded-2xl border border-zblack-800 transition-colors group relative ${onClick || premiumOnly ? 'cursor-pointer hover:border-zgold-500/50' : ''}`}
+      className={`flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200 transition-colors group relative shadow-sm ${onClick || premiumOnly ? 'cursor-pointer hover:border-zblue-300' : ''}`}
     >
       <div className={`flex items-center gap-4 ${premiumOnly && !isPremium ? 'opacity-50' : ''}`}>
-        <div className={`p-3 bg-zblack-900 rounded-xl text-gray-400 transition-colors ${onClick ? 'group-hover:text-zgold-500' : ''}`}>
+        <div className={`p-3 bg-slate-50 rounded-xl text-slate-500 transition-colors ${onClick ? 'group-hover:text-zblue-600' : ''}`}>
           <Icon size={20} />
         </div>
         <div>
-          <h4 className="font-medium text-white flex items-center gap-2">
+          <h4 className="font-medium text-slate-900 flex items-center gap-2">
             {title}
-            {premiumOnly && !isPremium && <Lock size={12} className="text-zgold-500" />}
+            {premiumOnly && !isPremium && <Lock size={12} className="text-zblue-500" />}
           </h4>
-          <p className="text-xs text-gray-500">{desc}</p>
+          <p className="text-xs text-slate-500">{desc}</p>
         </div>
       </div>
       {(onClick || premiumOnly) && (
-        <div className="w-2 h-2 rounded-full bg-zgold-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="w-2 h-2 rounded-full bg-zblue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
       )}
     </div>
   );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <h2 className="text-3xl font-bold text-white mb-6">Meu Perfil</h2>
+      <h2 className="text-3xl font-bold text-slate-900 mb-6">Meu Perfil</h2>
 
       {/* User Header */}
-      <div className="bg-zblack-900 border border-zblack-800 rounded-3xl p-8 mb-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-zgold-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-        <div className="w-32 h-32 rounded-full border-4 border-zgold-500 shadow-xl bg-zblack-800 flex items-center justify-center text-5xl font-bold text-white relative overflow-hidden shrink-0">
+      <div className="bg-white border border-slate-200 rounded-3xl p-8 mb-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden shadow-sm">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-zblue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+        <div className="w-32 h-32 rounded-full border-4 border-zblue-500 shadow-xl bg-slate-100 flex items-center justify-center text-5xl font-bold text-white relative overflow-hidden shrink-0">
           {user.photoUrl ? (
              <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" />
           ) : (
-             user.name.charAt(0)
+             <span className="text-slate-400">{user.name.charAt(0)}</span>
           )}
           {isPremium && (
-             <div className="absolute -top-2 -right-2 bg-zgold-500 text-black p-2 rounded-full">
+             <div className="absolute -top-2 -right-2 bg-zblue-500 text-white p-2 rounded-full ring-4 ring-white">
                <Crown size={18} />
              </div>
           )}
@@ -184,14 +184,14 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
         <div className="text-center md:text-left z-10 w-full md:w-auto flex-1">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-              <h3 className="text-2xl font-bold text-white">{user.name}</h3>
-              <p className="text-gray-400 mb-1">{user.email}</p>
-              <p className="text-gray-500 text-sm mb-4">{user.phone || 'Sem telefone'}</p>
+              <h3 className="text-2xl font-bold text-slate-900">{user.name}</h3>
+              <p className="text-slate-500 mb-1">{user.email}</p>
+              <p className="text-slate-400 text-sm mb-4">{user.phone || 'Sem telefone'}</p>
               <div className="flex gap-2 justify-center md:justify-start">
-                <span className={`px-4 py-1 rounded-full text-sm font-bold shadow-lg ${isPremium ? 'bg-zgold-500 text-black' : 'bg-gray-700 text-white'}`}>
+                <span className={`px-4 py-1 rounded-full text-sm font-bold shadow-md ${isPremium ? 'bg-zblue-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
                   Plano {user.plan || 'Free'}
                 </span>
-                <span className="bg-zblack-950 border border-zblack-800 text-gray-300 px-4 py-1 rounded-full text-sm font-medium">
+                <span className="bg-slate-50 border border-slate-200 text-slate-500 px-4 py-1 rounded-full text-sm font-medium">
                   ID: #{user.id.substring(0, 6)}
                 </span>
               </div>
@@ -201,7 +201,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
             {!isPremium && (
               <button 
                 onClick={onOpenPremium}
-                className="bg-gradient-to-r from-zgold-500 to-zgold-600 hover:from-zgold-400 hover:to-zgold-500 text-black font-bold px-6 py-3 rounded-xl shadow-lg shadow-zgold-500/20 transition-transform active:scale-95 flex items-center gap-2"
+                className="bg-zblue-600 hover:bg-zblue-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-zblue-500/20 transition-transform active:scale-95 flex items-center gap-2"
               >
                 <Crown size={18} />
                 Tornar-se Premium
@@ -214,7 +214,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Settings Grid */}
         <div className="space-y-4">
-          <h3 className="text-xl font-bold text-white mb-4">Geral</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Geral</h3>
           <div className="grid grid-cols-1 gap-4">
             <SettingItem 
               icon={UserIcon} 
@@ -249,30 +249,30 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
 
         {/* Alert Configuration Panel */}
         <div className="space-y-4">
-          <h3 className="text-xl font-bold text-white mb-4">Configuração de Alertas</h3>
-          <div className="bg-zblack-900 border border-zblack-800 rounded-3xl p-6 relative overflow-hidden h-full">
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Configuração de Alertas</h3>
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 relative overflow-hidden h-full shadow-sm">
             
             {!isPremium && (
-               <div className="absolute inset-0 bg-zblack-900/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center p-6 text-center">
-                  <div className="bg-zgold-500/10 p-3 rounded-full mb-3">
-                     <Lock className="text-zgold-500" size={24} />
+               <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="bg-zblue-100 p-3 rounded-full mb-3">
+                     <Lock className="text-zblue-600" size={24} />
                   </div>
-                  <h4 className="font-bold text-white">Alertas Personalizados</h4>
-                  <p className="text-sm text-gray-400 mb-4">Usuários Free têm alertas fixos (10% Queda / 15% Ganho).</p>
-                  <button onClick={onOpenPremium} className="text-zgold-500 text-sm font-bold hover:underline">
+                  <h4 className="font-bold text-slate-900">Alertas Personalizados</h4>
+                  <p className="text-sm text-slate-500 mb-4">Usuários Free têm alertas fixos (10% Queda / 15% Ganho).</p>
+                  <button onClick={onOpenPremium} className="text-zblue-600 text-sm font-bold hover:underline">
                      Desbloquear Controle Total
                   </button>
                </div>
             )}
 
-            <div className="flex justify-between items-center mb-8 pb-6 border-b border-zblack-800">
+            <div className="flex justify-between items-center mb-8 pb-6 border-b border-slate-100">
               <div>
-                <h4 className="text-lg font-bold text-white">Notificações Push</h4>
-                <p className="text-sm text-gray-400">Receba alertas em tempo real no dispositivo.</p>
+                <h4 className="text-lg font-bold text-slate-900">Notificações Push</h4>
+                <p className="text-sm text-slate-500">Receba alertas em tempo real no dispositivo.</p>
               </div>
               <button 
                 onClick={() => setAlertsEnabled(!alertsEnabled)}
-                className={`w-14 h-8 rounded-full transition-colors relative ${alertsEnabled ? 'bg-zgold-500' : 'bg-zblack-800'}`}
+                className={`w-14 h-8 rounded-full transition-colors relative ${alertsEnabled ? 'bg-zblue-600' : 'bg-slate-200'}`}
               >
                 <div className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform duration-300 shadow-md ${alertsEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
               </button>
@@ -283,11 +283,11 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
               {/* Drop Threshold */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2 text-red-400 font-medium">
+                  <div className="flex items-center gap-2 text-red-500 font-medium">
                     <AlertTriangle size={18} />
                     <span>Alerta de Queda</span>
                   </div>
-                  <span className="text-2xl font-bold text-white font-mono">{dropThreshold}%</span>
+                  <span className="text-2xl font-bold text-slate-900 font-mono">{dropThreshold}%</span>
                 </div>
                 <input 
                   type="range" 
@@ -295,20 +295,20 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                   max="50" 
                   value={dropThreshold}
                   onChange={(e) => setDropThreshold(Number(e.target.value))}
-                  className="w-full h-2 bg-zblack-950 rounded-lg appearance-none cursor-pointer accent-red-500"
+                  className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-red-500"
                   disabled={!isPremium}
                 />
-                <p className="text-xs text-gray-500 mt-2">Notificar quando um ativo desvalorizar mais de {dropThreshold}%.</p>
+                <p className="text-xs text-slate-400 mt-2">Notificar quando um ativo desvalorizar mais de {dropThreshold}%.</p>
               </div>
 
               {/* Gain Threshold */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2 text-green-400 font-medium">
+                  <div className="flex items-center gap-2 text-green-600 font-medium">
                     <TrendingUp size={18} />
                     <span>Alerta de Valorização</span>
                   </div>
-                  <span className="text-2xl font-bold text-white font-mono">{gainThreshold}%</span>
+                  <span className="text-2xl font-bold text-slate-900 font-mono">{gainThreshold}%</span>
                 </div>
                 <input 
                   type="range" 
@@ -316,10 +316,10 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                   max="100" 
                   value={gainThreshold}
                   onChange={(e) => setGainThreshold(Number(e.target.value))}
-                  className="w-full h-2 bg-zblack-950 rounded-lg appearance-none cursor-pointer accent-green-500"
+                  className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-green-500"
                   disabled={!isPremium}
                 />
-                <p className="text-xs text-gray-500 mt-2">Notificar quando um ativo valorizar mais de {gainThreshold}%.</p>
+                <p className="text-xs text-slate-400 mt-2">Notificar quando um ativo valorizar mais de {gainThreshold}%.</p>
               </div>
 
               <div className="pt-4">
@@ -329,7 +329,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                   className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
                     isSaved 
                       ? 'bg-green-500 text-white'
-                      : 'bg-zblack-950 text-white hover:bg-zgold-500 hover:text-black border border-zblack-800 hover:border-zgold-500'
+                      : 'bg-slate-900 text-white hover:bg-zblue-600 hover:shadow-lg'
                   }`}
                 >
                   {isSaved ? (
@@ -352,25 +352,25 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
       </div>
 
       {/* Support Section */}
-      <div className="mt-8 p-6 bg-gradient-to-r from-zgold-500/10 to-transparent border border-zgold-500/20 rounded-3xl flex justify-between items-center">
+      <div className="mt-8 p-6 bg-gradient-to-r from-zblue-500/10 to-transparent border border-zblue-100 rounded-3xl flex justify-between items-center">
         <div>
-          <p className="text-zgold-500 font-bold mb-1">Precisa de ajuda especializada?</p>
-          <p className="text-sm text-gray-400">Nossos consultores BODIVA estão disponíveis 24/7.</p>
+          <p className="text-zblue-600 font-bold mb-1">Precisa de ajuda especializada?</p>
+          <p className="text-sm text-slate-500">Nossos consultores BODIVA estão disponíveis 24/7.</p>
         </div>
-        <button className="bg-zblack-900 hover:bg-white hover:text-black text-white px-6 py-3 rounded-xl text-sm font-semibold transition-colors border border-zblack-800 shadow-lg">
+        <button className="bg-white hover:bg-slate-50 text-slate-900 px-6 py-3 rounded-xl text-sm font-semibold transition-colors border border-slate-200 shadow-md">
           Falar com Suporte
         </button>
       </div>
 
       {/* Edit Profile Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-zblack-900 border border-zblack-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-white">Editar Dados Pessoais</h3>
+              <h3 className="text-xl font-bold text-slate-900">Editar Dados Pessoais</h3>
               <button 
                 onClick={() => setIsEditModalOpen(false)} 
-                className="text-gray-400 hover:text-white p-2 hover:bg-zblack-800 rounded-lg transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <X size={20} />
               </button>
@@ -378,7 +378,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
 
             {/* Error Alert */}
             {editError && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center gap-2 text-red-500 text-xs font-medium animate-in slide-in-from-top-1">
+              <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-red-600 text-xs font-medium animate-in slide-in-from-top-1">
                 <AlertCircle size={14} className="flex-shrink-0" />
                 <span>{editError}</span>
               </div>
@@ -388,11 +388,11 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
               
               {/* Profile Photo Upload */}
               <div className="flex flex-col items-center mb-6">
-                 <div className="w-24 h-24 rounded-full bg-zblack-800 border-2 border-zgold-500 flex items-center justify-center overflow-hidden mb-3 relative group">
+                 <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-zblue-500 flex items-center justify-center overflow-hidden mb-3 relative group">
                    {tempProfile.photoUrl ? (
                      <img src={tempProfile.photoUrl} alt="Preview" className="w-full h-full object-cover" />
                    ) : (
-                     <span className="text-3xl font-bold text-white">{tempProfile.name.charAt(0)}</span>
+                     <span className="text-3xl font-bold text-slate-400">{tempProfile.name.charAt(0)}</span>
                    )}
                    <label htmlFor="photo-upload" className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
                       <Camera size={24} className="text-white" />
@@ -405,46 +405,46 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                    className="hidden" 
                    onChange={handlePhotoChange} 
                  />
-                 <label htmlFor="photo-upload" className="text-sm text-zgold-500 cursor-pointer hover:underline">
+                 <label htmlFor="photo-upload" className="text-sm text-zblue-600 cursor-pointer hover:underline">
                    Alterar Foto
                  </label>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1 flex items-center gap-2">
+                <label className="block text-xs font-medium text-slate-500 mb-1 flex items-center gap-2">
                   <UserIcon size={12} /> Nome Completo
                 </label>
                 <input 
                   type="text" 
                   value={tempProfile.name}
                   onChange={e => setTempProfile({...tempProfile, name: e.target.value})}
-                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1 flex items-center gap-2">
+                <label className="block text-xs font-medium text-slate-500 mb-1 flex items-center gap-2">
                   <Mail size={12} /> Email
                 </label>
                 <input 
                   type="email" 
                   value={tempProfile.email}
                   onChange={e => setTempProfile({...tempProfile, email: e.target.value})}
-                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1 flex items-center gap-2">
+                <label className="block text-xs font-medium text-slate-500 mb-1 flex items-center gap-2">
                   <Phone size={12} /> Telefone
                 </label>
                 <input 
                   type="tel" 
                   value={tempProfile.phone || ''}
                   onChange={e => setTempProfile({...tempProfile, phone: e.target.value})}
-                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
                   placeholder="+244 9..."
                 />
               </div>
@@ -453,13 +453,13 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                 <button 
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="flex-1 bg-zblack-950 hover:bg-zblack-800 text-gray-300 font-bold py-3 rounded-xl transition-colors border border-zblack-800"
+                  className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold py-3 rounded-xl transition-colors border border-slate-200"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20"
+                  className="flex-1 bg-zblue-600 hover:bg-zblue-500 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zblue-500/20"
                 >
                   Salvar
                 </button>
@@ -471,15 +471,15 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
 
       {/* Password Change Modal */}
       {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-zblack-900 border border-zblack-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <Shield size={20} className="text-zgold-500" /> Alterar Senha
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Shield size={20} className="text-zblue-500" /> Alterar Senha
               </h3>
               <button 
                 onClick={() => setIsPasswordModalOpen(false)} 
-                className="text-gray-400 hover:text-white p-2 hover:bg-zblack-800 rounded-lg transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <X size={20} />
               </button>
@@ -487,7 +487,7 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
 
             {/* Error Alert */}
             {passwordError && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center gap-2 text-red-500 text-xs font-medium animate-in slide-in-from-top-1">
+              <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-red-600 text-xs font-medium animate-in slide-in-from-top-1">
                 <AlertCircle size={14} className="flex-shrink-0" />
                 <span>{passwordError}</span>
               </div>
@@ -495,28 +495,28 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
             
             <form onSubmit={handleSavePassword} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1 flex items-center gap-2">
+                <label className="block text-xs font-medium text-slate-500 mb-1 flex items-center gap-2">
                   <Key size={12} /> Nova Senha
                 </label>
                 <input 
                   type="password" 
                   value={passwordData.newPassword}
                   onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})}
-                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
                   placeholder="Mínimo 6 caracteres"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1 flex items-center gap-2">
+                <label className="block text-xs font-medium text-slate-500 mb-1 flex items-center gap-2">
                   <Key size={12} /> Confirmar Senha
                 </label>
                 <input 
                   type="password" 
                   value={passwordData.confirmPassword}
                   onChange={e => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                  className="w-full bg-zblack-950 border border-zblack-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-zgold-500 transition-colors placeholder-gray-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
                   placeholder="Repita a nova senha"
                   required
                 />
@@ -526,13 +526,13 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
                 <button 
                   type="button"
                   onClick={() => setIsPasswordModalOpen(false)}
-                  className="flex-1 bg-zblack-950 hover:bg-zblack-800 text-gray-300 font-bold py-3 rounded-xl transition-colors border border-zblack-800"
+                  className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold py-3 rounded-xl transition-colors border border-slate-200"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20"
+                  className="flex-1 bg-zblue-600 hover:bg-zblue-500 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zblue-500/20"
                 >
                   Atualizar Senha
                 </button>
@@ -544,25 +544,25 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdateUser, onOpenPremium }) 
 
       {/* Confirmation Save Modal */}
       {isConfirmSaveModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-zblack-900 border border-zblack-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200 text-center">
-            <div className="w-16 h-16 bg-zgold-500/10 text-zgold-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200 text-center">
+            <div className="w-16 h-16 bg-zblue-50 text-zblue-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle size={32} />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Salvar Alterações?</h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Salvar Alterações?</h3>
+            <p className="text-slate-500 text-sm mb-6">
               Tem certeza que deseja atualizar os seus dados de perfil?
             </p>
             <div className="flex gap-3">
               <button 
                 onClick={() => setIsConfirmSaveModalOpen(false)}
-                className="flex-1 bg-zblack-950 hover:bg-zblack-800 text-gray-300 font-bold py-3 rounded-xl transition-colors border border-zblack-800"
+                className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold py-3 rounded-xl transition-colors border border-slate-200"
               >
                 Cancelar
               </button>
               <button 
                 onClick={executeSaveProfile}
-                className="flex-1 bg-zgold-500 hover:bg-zgold-400 text-black font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zgold-500/20"
+                className="flex-1 bg-zblue-600 hover:bg-zblue-500 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-zblue-500/20"
               >
                 Confirmar
               </button>
