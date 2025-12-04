@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, UserPlus, LogIn, AlertCircle, Mail, Key, CheckCircle, ArrowLeft } from 'lucide-react';
+import { ArrowRight, UserPlus, Mail, Key, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { User } from '../types';
 import { db } from '../services/db';
 
@@ -7,391 +7,101 @@ interface LoginProps {
   onLogin: (user: User) => void;
 }
 
-type AuthMode = 'login' | 'register' | 'forgot' | 'reset';
-
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   
   // Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const resetForm = () => {
-    setError(null);
-    setSuccessMsg(null);
-    setPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-  };
-
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
-      const user = db.login(email, password);
-      onLogin(user);
-    } catch (err: any) {
-      setError(err.message || 'Ocorreu um erro.');
-    }
-  };
-
-  const handleGoogleLogin = () => {
-    try {
-      // Simulate Google Auth with a mock user for the demo
-      const mockGoogleUser = {
-        name: 'Utilizador Google',
-        email: 'demo.google@gmail.com',
-        photoUrl: 'https://ui-avatars.com/api/?name=Google+User&background=random'
-      };
-      
-      const user = db.loginWithGoogle(mockGoogleUser.email, mockGoogleUser.name, mockGoogleUser.photoUrl);
-      onLogin(user);
-    } catch (err: any) {
-      setError('Falha ao iniciar sessão com Google.');
-    }
-  };
-
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    try {
-      const newUser = db.createUser({ name, email, password, phone });
-      onLogin(newUser);
-    } catch (err: any) {
-      setError(err.message || 'Ocorreu um erro.');
-    }
-  };
-
-  const handleForgotSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    
-    // Check if user exists first
-    const exists = db.checkEmailExists(email);
-    if (!exists) {
-      setError('Este email não está registado no sistema.');
-      return;
-    }
-
-    // Simulate sending email
-    setSuccessMsg('Link de recuperação enviado! Verifique o seu email.');
-  };
-
-  const handleResetSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (newPassword !== confirmPassword) {
-      setError('As senhas não coincidem.');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres.');
-      return;
-    }
-
-    try {
-      db.resetPassword(email, newPassword);
-      setSuccessMsg('Senha atualizada com sucesso!');
-      setTimeout(() => {
-        setAuthMode('login');
-        setSuccessMsg(null);
-        setPassword(''); 
-      }, 2000);
+      if (mode === 'login') {
+        const user = db.login(email, password);
+        onLogin(user);
+      } else if (mode === 'register') {
+        const user = db.createUser({ name, email, password, phone });
+        onLogin(user);
+      } else {
+        if (db.checkEmailExists(email)) setSuccess('Email de recuperação enviado!');
+        else setError('Email não encontrado.');
+      }
     } catch (err: any) {
       setError(err.message);
     }
   };
 
-  const switchMode = (mode: AuthMode) => {
-    setAuthMode(mode);
-    resetForm();
+  const handleGoogle = () => {
+    onLogin(db.loginWithGoogle('demo.google@gmail.com', 'Google User', 'https://ui-avatars.com/api/?name=Google+User&background=random'));
   };
 
   return (
     <div className="min-h-screen bg-[#f9f9fd] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Decor */}
       <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-zblue-500/5 rounded-full blur-[100px]" />
       <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] bg-zblue-500/10 rounded-full blur-[80px]" />
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2 tracking-tighter">
-            Zi<span className="text-zblue-500">FÓLIO</span>
-          </h1>
-          <p className="text-slate-500">
-            {authMode === 'register' ? 'Crie a sua carteira de investimentos inteligente.' : 
-             authMode === 'forgot' || authMode === 'reset' ? 'Recupere o acesso à sua conta.' :
-             'A tua carteira de investimentos, clara como nunca.'}
-          </p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2 tracking-tighter">Zi<span className="text-zblue-500">FÓLIO</span></h1>
+          <p className="text-slate-500">Sua carteira BODIVA inteligente.</p>
         </div>
 
-        <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl shadow-slate-200/50 backdrop-blur-xl">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-red-600 text-sm animate-in slide-in-from-top-2">
-              <AlertCircle size={16} />
-              <span>{error}</span>
+        <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl shadow-slate-200/50">
+          {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 text-sm"><AlertCircle size={16}/>{error}</div>}
+          {success && <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-xl flex items-center gap-2 text-sm"><CheckCircle size={16}/>{success}</div>}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'register' && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-slate-500">Nome</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-zblue-500" required />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-500">Telefone</label>
+                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-zblue-500" required />
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="text-sm font-medium text-slate-500">Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-zblue-500" required />
             </div>
-          )}
 
-          {successMsg && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-100 rounded-xl flex items-center gap-2 text-green-600 text-sm animate-in slide-in-from-top-2">
-              <CheckCircle size={16} />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          {/* LOGIN FORM */}
-          {authMode === 'login' && (
-            <form onSubmit={handleLoginSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            {mode !== 'forgot' && (
               <div>
-                <label className="block text-sm font-medium text-slate-500 mb-2">Email</label>
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                  placeholder="investidor@bodiva.ao"
-                  required
-                />
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <label className="block text-sm font-medium text-slate-500">Senha</label>
-                  <button type="button" onClick={() => switchMode('forgot')} className="text-xs text-zblue-600 hover:text-zblue-500 font-medium">Esqueceu a senha?</button>
+                <div className="flex justify-between mb-1">
+                   <label className="text-sm font-medium text-slate-500">Senha</label>
+                   {mode === 'login' && <button type="button" onClick={() => setMode('forgot')} className="text-xs text-zblue-600 font-bold hover:underline">Esqueceu?</button>}
                 </div>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                  placeholder="••••••••"
-                  required
-                />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-zblue-500" required />
               </div>
+            )}
 
-              <button 
-                type="submit"
-                className="w-full bg-zblue-600 hover:bg-zblue-500 text-white font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-zblue-500/20 transform active:scale-95 mt-2"
-              >
-                <span>Entrar na Carteira</span>
-                <ArrowRight size={18} />
-              </button>
-            </form>
-          )}
+            <button type="submit" className="w-full bg-zblue-600 hover:bg-zblue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-zblue-500/20 flex items-center justify-center gap-2 mt-2 transition-transform active:scale-95">
+               {mode === 'login' ? 'Entrar' : mode === 'register' ? 'Criar Conta' : 'Recuperar'} {mode !== 'forgot' && <ArrowRight size={18}/>}
+            </button>
+          </form>
 
-          {/* REGISTER FORM */}
-          {authMode === 'register' && (
-            <form onSubmit={handleRegisterSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
-                <label className="block text-sm font-medium text-slate-500 mb-2">Nome Completo</label>
-                <input 
-                  type="text" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                  placeholder="Seu nome"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-500 mb-2">Email</label>
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                  placeholder="investidor@bodiva.ao"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-500 mb-2">Telefone</label>
-                <input 
-                  type="tel" 
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                  placeholder="+244"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-500 mb-2">Senha</label>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              <button 
-                type="submit"
-                className="w-full bg-zblue-600 hover:bg-zblue-500 text-white font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-zblue-500/20 transform active:scale-95 mt-2"
-              >
-                <span>Criar conta grátis</span>
-                <UserPlus size={18} />
-              </button>
-            </form>
-          )}
-
-          {/* FORGOT PASSWORD FORM */}
-          {authMode === 'forgot' && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              {!successMsg ? (
-                <form onSubmit={handleForgotSubmit} className="space-y-4">
-                  <p className="text-sm text-slate-500 mb-4">
-                    Insira o seu email registado para receber um link de redefinição de senha.
-                  </p>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-500 mb-2">Email</label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                      <input 
-                        type="email" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                        placeholder="investidor@bodiva.ao"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit"
-                    className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors mt-2"
-                  >
-                    Enviar Link de Recuperação
-                  </button>
-                </form>
-              ) : (
-                <div className="py-4 text-center">
-                   <p className="text-sm text-slate-500 mb-6">
-                     Se o email <strong>{email}</strong> existir na nossa base de dados, receberá instruções em breve.
-                   </p>
-                   {/* DEMO PURPOSES ONLY */}
-                   <button 
-                     onClick={() => switchMode('reset')}
-                     className="w-full bg-zblue-50 text-zblue-600 border border-zblue-100 hover:bg-zblue-100 font-bold py-3 rounded-xl transition-colors text-sm"
-                   >
-                     (Demo) Simular Clique no Email
-                   </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* RESET PASSWORD FORM */}
-          {authMode === 'reset' && (
-             <form onSubmit={handleResetSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-              <p className="text-sm text-slate-500 mb-4">
-                Crie uma nova senha segura para sua conta.
-              </p>
-              <div>
-                <label className="block text-sm font-medium text-slate-500 mb-2">Nova Senha</label>
-                <div className="relative">
-                  <Key className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                  <input 
-                    type="password" 
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-500 mb-2">Confirmar Senha</label>
-                <div className="relative">
-                  <Key className="absolute left-4 top-3.5 text-slate-400" size={18} />
-                  <input 
-                    type="password" 
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-900 focus:outline-none focus:border-zblue-500 transition-colors placeholder-slate-400"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit"
-                className="w-full bg-zblue-600 hover:bg-zblue-500 text-white font-bold py-4 rounded-xl transition-all duration-300 shadow-lg mt-2"
-              >
-                Atualizar Senha
-              </button>
-            </form>
-          )}
-
-          {/* Social / Divider (Only on Login/Register) */}
-          {(authMode === 'login' || authMode === 'register') && (
-            <div className="mt-8">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-slate-400">Ou continuar com</span>
-                </div>
-              </div>
-
-              <button 
-                type="button"
-                onClick={handleGoogleLogin}
-                className="mt-6 w-full bg-slate-50 text-slate-700 font-medium py-3 rounded-xl flex items-center justify-center space-x-2 hover:bg-slate-100 transition-colors border border-slate-200 shadow-sm transform active:scale-95 duration-200"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
-                </svg>
-                <span>Continuar com Google</span>
-              </button>
-            </div>
+          {mode === 'login' && (
+            <button onClick={handleGoogle} className="mt-4 w-full bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50">
+               <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg> Google
+            </button>
           )}
         </div>
-        
-        {/* Footer Navigation */}
+
         <div className="text-center mt-6">
-           {authMode === 'login' && (
-             <button onClick={() => switchMode('register')} className="text-slate-500 text-sm hover:text-slate-900 transition-colors">
-               Não tem conta? <span className="text-zblue-600 font-medium">Criar conta grátis</span>
-             </button>
-           )}
-           {authMode === 'register' && (
-             <button onClick={() => switchMode('login')} className="text-slate-500 text-sm hover:text-slate-900 transition-colors">
-               Já tem conta? <span className="text-zblue-600 font-medium">Fazer Login</span>
-             </button>
-           )}
-           {(authMode === 'forgot' || authMode === 'reset') && (
-             <button onClick={() => switchMode('login')} className="text-slate-500 text-sm hover:text-slate-900 transition-colors flex items-center justify-center gap-1 w-full">
-               <ArrowLeft size={14} /> Voltar ao Login
-             </button>
-           )}
+           {mode === 'login' && <button onClick={() => setMode('register')} className="text-slate-500 text-sm">Não tem conta? <span className="text-zblue-600 font-bold">Criar grátis</span></button>}
+           {mode === 'register' && <button onClick={() => setMode('login')} className="text-slate-500 text-sm">Já tem conta? <span className="text-zblue-600 font-bold">Login</span></button>}
+           {mode === 'forgot' && <button onClick={() => setMode('login')} className="text-slate-500 text-sm flex items-center justify-center gap-1"><ArrowLeft size={14}/> Voltar</button>}
         </div>
-      </div>
-
-      {/* Copyright Footer */}
-      <div className="absolute bottom-6 w-full text-center z-10 pointer-events-none">
-         <p className="text-xs text-slate-400">
-           © {new Date().getFullYear()} ZiFÓLIO. Todos os direitos reservados.
-         </p>
       </div>
     </div>
   );

@@ -86,35 +86,29 @@ export const MARKET_INDICATORS: MarketIndicator[] = [
 export const MOCK_NEWS: NewsArticle[] = [
   {
     id: '1',
-    title: 'BODIVA Regista Recorde de Negociação em Março',
+    title: 'BODIVA Regista Recorde de Negociação',
     source: 'Economia & Mercado',
     date: '2 Horas atrás',
     publishedAt: '2024-03-20',
     summary: 'O volume de negócios na Bolsa de Dívida e Valores de Angola atingiu um novo pico histórico, impulsionado pela alta procura de Obrigações do Tesouro.',
-    content: `A Bolsa de Dívida e Valores de Angola (BODIVA) anunciou hoje que o volume de negociação no mês de Março superou todas as expectativas, registando um aumento de 25% em comparação com o período homólogo.
-
-Este crescimento foi impulsionado principalmente pela emissão de novas Obrigações do Tesouro Indexadas, que atraíram tanto investidores institucionais como particulares. Analistas apontam para a estabilização da taxa de câmbio como um factor chave para a retoma da confiança no mercado de capitais angolano.
-
-"Estamos a ver uma maturidade crescente dos investidores angolanos", afirmou o CEO da BODIVA. "A diversificação das carteiras é cada vez mais uma realidade."`,
+    content: `A Bolsa de Dívida e Valores de Angola (BODIVA) anunciou hoje que o volume de negociação no mês de Março superou todas as expectativas, registando um aumento de 25% em comparação com o período homólogo.`,
     category: 'Mercado',
     imageUrl: 'https://images.unsplash.com/photo-1611974765270-ca1258634369?q=80&w=1000&auto=format&fit=crop',
   },
   {
     id: '2',
-    title: 'Sonangol Prepara Nova Emissão de Obrigações',
+    title: 'Sonangol Prepara Nova Emissão',
     source: 'Jornal de Angola',
     date: '5 Horas atrás',
     publishedAt: '2024-03-19',
     summary: 'A petrolífera nacional planeia voltar ao mercado de capitais no próximo trimestre para financiar projectos de energias renováveis.',
-    content: `A Sonangol E.P. está em fase avançada de preparação para uma nova oferta pública de subscrição de obrigações. Desta vez, os fundos angariados serão destinados especificamente à transição energética da empresa.
-
-Espera-se que a taxa de juro seja competitiva, rondando os 15% ao ano, com maturidade de 5 anos. Fontes próximas ao processo indicam que o prospecto será submetido à CMC nas próximas semanas.`,
+    content: `A Sonangol E.P. está em fase avançada de preparação para uma nova oferta pública de subscrição de obrigações. Desta vez, os fundos angariados serão destinados especificamente à transição energética da empresa.`,
     category: 'Empresas',
     imageUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3dab?q=80&w=1000&auto=format&fit=crop',
   },
   {
     id: '3',
-    title: 'CMC Aprova Novo Regulamento para Fundos de Investimento',
+    title: 'CMC Aprova Novo Regulamento',
     source: 'Expansão',
     date: '1 Dia atrás',
     publishedAt: '2024-03-18',
@@ -124,7 +118,7 @@ Espera-se que a taxa de juro seja competitiva, rondando os 15% ao ano, com matur
   },
   {
     id: '4',
-    title: 'Inflação em Angola Desacelera para 14% em Fevereiro',
+    title: 'Inflação em Angola Desacelera',
     source: 'INE',
     date: '2 Dias atrás',
     publishedAt: '2024-03-17',

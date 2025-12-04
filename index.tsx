@@ -13,8 +13,6 @@ interface ErrorBoundaryState {
 }
 
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState;
-
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -31,71 +29,29 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ 
-          padding: '40px', 
-          color: '#1e293b', 
-          backgroundColor: '#f9f9fd', 
-          minHeight: '100vh', 
-          fontFamily: 'sans-serif',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center'
-        }}>
-          <h1 style={{ fontSize: '32px', marginBottom: '16px', color: '#6384ff', fontWeight: 'bold' }}>Algo deu errado</h1>
-          <p style={{ maxWidth: '500px', color: '#64748b', marginBottom: '32px', lineHeight: '1.6' }}>
-            A aplicação encontrou um erro inesperado. Por favor, tente recarregar a página.
+        <div className="min-h-screen bg-[#f9f9fd] flex flex-col items-center justify-center p-6 text-center">
+          <h1 className="text-3xl font-bold text-[#6384ff] mb-4">Algo deu errado</h1>
+          <p className="text-slate-500 max-w-md mb-8">
+            A aplicação encontrou um erro inesperado. Tente recarregar a página.
           </p>
-          <div style={{ 
-            backgroundColor: '#fff', 
-            padding: '24px', 
-            borderRadius: '16px', 
-            marginBottom: '32px', 
-            maxWidth: '90%', 
-            width: '600px',
-            overflow: 'auto',
-            border: '1px solid #e2e8f0',
-            color: '#ef4444',
-            textAlign: 'left',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-          }}>
-            <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#94a3b8', textTransform: 'uppercase' }}>Detalhes do Erro:</p>
-            <code style={{ fontSize: '14px', fontFamily: 'monospace' }}>{this.state.error?.message || 'Erro desconhecido'}</code>
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg max-w-xl w-full mb-8 text-left overflow-auto">
+             <p className="text-xs font-bold text-slate-400 uppercase mb-2">Detalhes do Erro</p>
+             <code className="text-sm font-mono text-red-500">{this.state.error?.message}</code>
           </div>
           <button 
-            onClick={() => {
-              localStorage.clear(); // Clear storage as it might be the cause
-              window.location.reload();
-            }} 
-            style={{ 
-              padding: '14px 32px', 
-              backgroundColor: '#6384ff', 
-              color: '#ffffff', 
-              border: 'none', 
-              borderRadius: '12px', 
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '16px',
-              boxShadow: '0 10px 15px -3px rgba(99, 132, 255, 0.2)'
-            }}
+            onClick={() => { localStorage.clear(); window.location.reload(); }}
+            className="bg-[#6384ff] hover:bg-[#4f46e5] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-[#6384ff]/20 transition-all"
           >
-            Limpar Dados & Recarregar
+            Limpar Dados e Recarregar
           </button>
         </div>
       );
     }
-
     return this.props.children;
   }
 }
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
-}
-
-const root = ReactDOM.createRoot(rootElement);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <React.StrictMode>
     <ErrorBoundary>

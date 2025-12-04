@@ -7,23 +7,15 @@ export enum AssetType {
 
 export interface Asset {
   id: string;
-  userId: string; // Linked to User
-  name: string; // e.g., "OT-NR-2025" -> Renamed to "Código de Negociação" in UI
-  typology: string; // New field: e.g., "UP", "FIS", "Ações"
-  type: AssetType; // Internal category for logic/charts
+  userId: string;
+  name: string; // Ticker/Code
+  typology: string; // e.g., "UP", "Obrigações", "Ações"
+  type: AssetType;
   purchaseDate: string;
-  investedAmount: number; // In AKZ
+  investedAmount: number;
   quantity: number;
-  interestRate: number; // Annual %
-  currentPriceUnit: number; // Current market price per unit
-}
-
-export interface PortfolioSummary {
-  totalInvested: number;
-  currentValue: number;
-  totalProfit: number;
-  profitabilityPercentage: number;
-  monthlyGrowth: number;
+  interestRate: number;
+  currentPriceUnit: number;
 }
 
 export interface Transaction {
@@ -39,19 +31,18 @@ export interface NewsArticle {
   id: string;
   title: string;
   source: string;
-  date: string; // Display text e.g. "2 Horas atrás"
-  publishedAt: string; // ISO Date YYYY-MM-DD for filtering
+  date: string;
+  publishedAt: string;
   summary: string;
   content?: string;
   category: 'Mercado' | 'Empresas' | 'Regulação' | 'Global';
   imageUrl: string;
-  url?: string;
 }
 
 export interface MarketIndicator {
   name: string;
   value: string;
-  change: number; // Percentage change
+  change: number;
   isPositive: boolean;
 }
 
@@ -59,11 +50,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password?: string; // Stored locally for MVP demo purposes only
+  password?: string;
   phone?: string;
-  photoUrl?: string; // Base64 string for profile picture
+  photoUrl?: string;
   plan?: 'Free' | 'Premium';
-  planExpiryDate?: string; // ISO Date
+  planExpiryDate?: string;
   createdAt: string;
   notificationSettings?: {
     enabled: boolean;
@@ -87,5 +78,3 @@ export interface Task {
   completed: boolean;
   createdAt: string;
 }
-
-export type ViewState = 'login' | 'dashboard' | 'assets' | 'simulator' | 'profile' | 'news' | 'news-detail';
